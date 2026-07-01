@@ -112,6 +112,11 @@ astrbot_plugin_autoreply_judge/
 
 ## Changelog
 
+### v1.2.1 (2026-07-01)
+
+#### New Features
+- Added group whitelist support
+
 ### v1.2.0 (2026-06-30)
 
 - Fixed plugin not working in some scenarios

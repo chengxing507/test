@@ -1,10 +1,4 @@
 {
-    "whitelist": {
-        "description": "群聊白名单（留空=所有群生效）",
-        "type": "list",
-        "hint": "仅白名单内的群聊启用本插件的判断功能。请填写群号（字符串格式），留空则所有群都生效。",
-        "default": []
-    },
     "enabled": {
         "description": "是否启用本插件",
         "type": "bool",
