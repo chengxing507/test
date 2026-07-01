@@ -102,6 +102,8 @@ class AutoReplyJudgePlugin(Star):
             return
         if not self._group_switch.get(group_id, True):
             return
+        if not self._is_whitelisted(group_id):
+            return
         sender = event.get_sender_name() or "未知"
         await self._record_history(group_id, sender, msg)
 
@@ -130,6 +132,8 @@ class AutoReplyJudgePlugin(Star):
             if not msg or msg.startswith("/"):
                 return
             if not self._group_switch.get(group_id, True):
+                return
+            if not self._is_whitelisted(group_id):
                 return
 
             cache_key = f"{group_id}:{msg}:{int(time.time()/60)}"
@@ -374,6 +378,13 @@ class AutoReplyJudgePlugin(Star):
                 "reason": "",
             }
         return None
+
+    def _is_whitelisted(self, group_id):
+        """检查群是否在白名单中；白名单为空列表则放行所有群"""
+        wl = self.config.get("whitelist", [])
+        if not wl:
+            return True
+        return group_id in wl
 
     def _get_group_id(self, event):
         """从 unified_msg_origin 提取群ID（v1.1 方案 + 多源回退）"""
