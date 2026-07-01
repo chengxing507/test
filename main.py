@@ -154,7 +154,7 @@ class AutoReplyJudgePlugin(Star):
                 # 真正的@消息 → 跳过LLM判断，直接放行
                 async with self._judged_lock:
                     self._judged[cache_key] = {"block": False, "time": time.time()}
-                logger.info(f"艾特放行 | {group_id} | {msg[:40]}")
+                logger.info(f"@放行 | {group_id} | {msg[:40]}")
                 return
 
             async with self._judging_groups_lock:
