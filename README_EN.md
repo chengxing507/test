@@ -112,6 +112,11 @@ astrbot_plugin_autoreply_judge/
 
 ## Changelog
 
+### v1.2.3 (2026-07-01)
+
+#### Bug Fixes
+- Fixed @ messages in non-whitelisted groups still triggering main LLM replies
+
 ### v1.2.2 (2026-07-01)
 
 #### Bug Fixes
