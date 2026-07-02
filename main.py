@@ -16,7 +16,7 @@ from astrbot.api import logger, AstrBotConfig
     "autoreply_judge",
     "StarBot",
     "LLM智能判断群聊消息是否需要自动回复",
-    "1.2.3",
+    "1.2.3.1",
 )
 class AutoReplyJudgePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -41,7 +41,7 @@ class AutoReplyJudgePlugin(Star):
 
     async def initialize(self):
         self._load_switches()
-        logger.info(f"判断插件已加载 v1.2.3，已恢复 {len(self._group_switch)} 个群开关状态")
+        logger.info(f"判断插件已加载 v1.2.3.1，已恢复 {len(self._group_switch)} 个群开关状态")
 
     def _load_switches(self):
         try:

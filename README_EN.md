@@ -112,6 +112,11 @@ astrbot_plugin_autoreply_judge/
 
 ## Changelog
 
+### v1.2.3.1 (2026-07-01)
+
+#### Bug Fixes
+- Fixed missing configuration item caused indirectly by the v1.2.3 update
+
 ### v1.2.3 (2026-07-01)
 
 #### Bug Fixes
