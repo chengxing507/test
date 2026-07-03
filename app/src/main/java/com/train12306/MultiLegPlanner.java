@@ -404,12 +404,14 @@ public class MultiLegPlanner {
             String hubName = hub.getValue();
 
             progressCurrent++;
-            int pct = (int)((float)progressCurrent / progressTotal * 100);
+            // 确保不超 total（递归调用可能超限，UI 也做 cap）
+            int displayCurrent = Math.min(progressCurrent, progressTotal);
+            int pct = progressTotal > 0 ? Math.min(100, (int)((float)displayCurrent / progressTotal * 100)) : 0;
             String progMsg = String.format("🔍 枢纽站 %s (%d/%d) %d%% | %s → %s → %s",
-                    hubName, progressCurrent, progressTotal, pct, from, hubName, to);
+                    hubName, displayCurrent, progressTotal, pct, from, hubName, to);
             log(progMsg);
             // 通知带百分比的进度
-            if (callback != null) callback.onProgressPercent(progressCurrent, progressTotal,
+            if (callback != null) callback.onProgressPercent(displayCurrent, progressTotal,
                     String.format("正在查询 %s → %s 的列车...", from, hubName));
 
             // 跳过已经过站
@@ -623,16 +625,31 @@ public class MultiLegPlanner {
             AppLogger.log("PLANNER", "AI 预筛选枢纽站，发送到 AI...");
             AIAnalysisClient aiClient = new AIAnalysisClient(baseUrl, apiKey, modelName);
             String result = aiClient.analyzeRoute("", prompt);
-            AppLogger.log("PLANNER", "AI 返回: " + result);
+            // 记录 AI 原始回复到日志
+            AppLogger.log("AI_RAW", "AI 预筛选原始回复: " + result);
 
-            // 解析返回的站点名
+            // 解析返回的站点名 - 增强解析
             Set<String> selected = new HashSet<>();
-            // 用分隔符切割
-            String[] parts = result.split("[，,、\\s]+");
+            // 1. 先尝试提取所有匹配的中文站名（2-4个汉字）
+            java.util.regex.Pattern stationPattern = java.util.regex.Pattern.compile(
+                "[" + String.join("", new ArrayList<>(HUBS.values())) + "]{2,}");
+            // 2. 用分隔符切割
+            String cleanResult = result.replaceAll("[\\*#\\[\\]()【】①②③④⑤⑥⑦⑧⑨⑩\\d+\\.、]", " ");
+            String[] parts = cleanResult.split("[，,、\\s]+");
             for (String p : parts) {
                 p = p.trim();
-                if (!p.isEmpty() && HUBS.containsValue(p)) {
+                if (p.isEmpty()) continue;
+                // 精确匹配
+                if (HUBS.containsValue(p)) {
                     selected.add(p);
+                } else {
+                    // 模糊匹配：检查是否包含某个枢纽站名
+                    for (String hubName : HUBS.values()) {
+                        if (p.contains(hubName) || hubName.contains(p)) {
+                            selected.add(hubName);
+                            break;
+                        }
+                    }
                 }
             }
 

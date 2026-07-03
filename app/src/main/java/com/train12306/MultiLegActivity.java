@@ -205,7 +205,7 @@ public class MultiLegActivity extends Activity {
             btnQuery.setEnabled(true);
         });
 
-        btnBack.setOnClickListener(v -> finish());
+        btnBack.setOnClickListener(v -> goBackToHome());
 
         // 排序按钮
         btnSortTime.setOnClickListener(v -> {
@@ -214,14 +214,53 @@ public class MultiLegActivity extends Activity {
             sortResults();
         });
         btnSortPrice.setOnClickListener(v -> {
-            sortPriceAsc = !sortPriceAsc;
-            btnSortPrice.setText("价格 " + (sortPriceAsc ? "↑" : "↓"));
-            Toast.makeText(this, "价格数据需要额外查询，先按时间排序", Toast.LENGTH_SHORT).show();
-            sortResults();
+            // 改为显示详细计算过程
+            StringBuilder calcLog = new StringBuilder();
+            calcLog.append("📊 路径计算过程:\n");
+            calcLog.append("=======================\n");
+            if (allPaths.isEmpty()) {
+                calcLog.append("暂无路径数据\n");
+            } else {
+                for (int i = 0; i < Math.min(allPaths.size(), 20); i++) {
+                    MultiLegPlanner.Path path = allPaths.get(i);
+                    calcLog.append("路径 #").append(i + 1).append(":\n");
+                    for (int j = 0; j < path.segments.size(); j++) {
+                        MultiLegPlanner.Segment seg = path.segments.get(j);
+                        calcLog.append("  第").append(j + 1).append("段: ")
+                            .append(seg.trainCode).append(" ")
+                            .append(seg.fromStation).append(" ").append(seg.fromTime)
+                            .append(" → ").append(seg.toStation).append(" ").append(seg.toTime)
+                            .append(" (历时 ").append(seg.duration).append(")\n");
+                        if (j < path.segments.size() - 1) {
+                            MultiLegPlanner.Segment next = path.segments.get(j + 1);
+                            int waitMin = path.totalWaitMinutes; // 粗略
+                            calcLog.append("    换乘等待: 计算中...\n");
+                        }
+                    }
+                    calcLog.append("  总耗时: ").append(path.totalDuration)
+                        .append(" | 换乘: ").append(path.transfers).append("次\n");
+                    calcLog.append("----------------------\n");
+                }
+            }
+            String calcStr = calcLog.toString();
+            appendLog(calcStr + "\n");
+            setStatus("✅ 计算过程已输出到日志");
+            Toast.makeText(this, "计算过程已输出到日志区", Toast.LENGTH_SHORT).show();
         });
 
         btnAiFilter.setOnClickListener(v -> openAIFilter());
         btnAiConfig.setOnClickListener(v -> showPromptConfigDialog());
+    }
+
+    @Override
+    public void onBackPressed() {
+        goBackToHome();
+    }
+
+    private void goBackToHome() {
+        // 逐级退出：直接回到 MainActivity
+        AppLogger.log("MULTI", "返回首页");
+        finish();
     }
 
     private void startQuery() {
@@ -405,17 +444,17 @@ public class MultiLegActivity extends Activity {
         if (tvLiveLog != null) tvLiveLog.setText("");
     }
 
-    /** 更新水平进度条 */
+    /** 更新水平进度条（带100%上限保护） */
     private void updateProgress(final int current, final int total) {
         runOnUiThread(() -> {
             if (linearProgress != null) {
-                int pct = total > 0 ? (int)((float)current / total * 100) : 0;
+                int pct = total > 0 ? Math.min(100, (int)((float)current / total * 100)) : 0;
                 linearProgress.setProgress(pct);
                 linearProgress.setMax(100);
             }
             if (tvProgressPercent != null) {
-                int pct = total > 0 ? (int)((float)current / total * 100) : 0;
-                tvProgressPercent.setText(String.format("%d%%", pct));
+                int pct = total > 0 ? Math.min(100, (int)((float)current / total * 100)) : 0;
+                tvProgressPercent.setText(String.format("%d%%", Math.min(pct, 100)));
             }
         });
     }
@@ -483,33 +522,58 @@ public class MultiLegActivity extends Activity {
         final String promptText = sb.toString();
 
         setStatus("🤖 AI 分析中...");
+        // 在结果列表上方显示 AI 分析结果（非弹窗）
+        final TextView tvAiResult = new TextView(this);
+        tvAiResult.setPadding(12, 12, 12, 12);
+        tvAiResult.setTextSize(14);
+        tvAiResult.setTextColor(0xFF1A1C1E);
+        tvAiResult.setLineSpacing(4, 1);
+        tvAiResult.setText("⏳ AI 正在分析...\n" + promptText.substring(0, Math.min(100, promptText.length())) + "...");
+        
+        // 插入到结果列表上方
+        final LinearLayout rootLayout = findViewById(R.id.layout_results_controls);
+        if (rootLayout != null && rootLayout.getParent() instanceof ViewGroup) {
+            ViewGroup parent = (ViewGroup) rootLayout.getParent();
+            // 移除旧的 AI 结果 View（如果有）
+            View oldResult = findViewById(R.id.tv_ai_analysis_result);
+            if (oldResult != null) {
+                ((ViewGroup) oldResult.getParent()).removeView(oldResult);
+            }
+            tvAiResult.setId(R.id.tv_ai_analysis_result);
+            // 在结果控制栏下方插入
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.setMargins(8, 8, 8, 8);
+            tvAiResult.setLayoutParams(lp);
+            // 找到合适的父容器插入
+            if (parent instanceof LinearLayout) {
+                int insertIdx = Math.max(0, parent.indexOfChild(rootLayout) + 1);
+                ((LinearLayout) parent).addView(tvAiResult, insertIdx);
+            }
+        }
+
         final AIAnalysisClient aiClient = new AIAnalysisClient(baseUrl, apiKey, modelName);
         new Thread(() -> {
             try {
                 String result = aiClient.analyzeRoute("", promptText);
-                runOnUiThread(() -> showAIResult(result));
+                runOnUiThread(() -> {
+                    tvAiResult.setText("🤖 AI 分析结果:\n\n" + result);
+                    setStatus("✅ AI 分析完成");
+                    appendLog("✅ AI 分析完成\n");
+                    AppLogger.log("AI_RAW", "AI 进一步分析原始回复: " + result);
+                });
             } catch (Exception e) {
                 runOnUiThread(() -> {
+                    tvAiResult.setText("❌ AI 分析失败: " + e.getMessage());
                     setStatus("❌ AI 分析失败: " + e.getMessage());
-                    Toast.makeText(MultiLegActivity.this,
-                            "AI 分析失败: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    appendLog("❌ AI 分析失败: " + e.getMessage() + "\n");
                 });
             }
         }).start();
     }
 
     private void showAIResult(String result) {
-        new AlertDialog.Builder(this)
-                .setTitle("🤖 AI 筛选结果")
-                .setMessage(result)
-                .setPositiveButton("确定", null)
-                .setNeutralButton("复制", (d, w) -> {
-                    android.content.ClipboardManager cm = (android.content.ClipboardManager)
-                            getSystemService(Context.CLIPBOARD_SERVICE);
-                    cm.setPrimaryClip(android.content.ClipData.newPlainText("ai_result", result));
-                    Toast.makeText(this, "已复制", Toast.LENGTH_SHORT).show();
-                })
-                .show();
+        // 已废弃 - 改用非弹窗显示
     }
 
     /** 显示 Prompt 配置对话框 — 预设 + 自定义 */

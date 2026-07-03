@@ -67,7 +67,7 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="0"
         android:fillViewport="true">
 
         <LinearLayout
@@ -346,12 +346,19 @@
         android:textColor="@color/md3_outline"
         android:visibility="gone" />
 
-    <!-- 结果列表 -->
+    <!-- AI 分析结果（动态插入，预留 ID） -->
+    <TextView
+        android:id="@+id/tv_ai_analysis_result"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <!-- 结果列表 - 铺满剩余空间 -->
     <ListView
         android:id="@+id/list_paths"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="3"
         android:visibility="gone"
         android:divider="@null"
         android:dividerHeight="0dp"
