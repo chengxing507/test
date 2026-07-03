@@ -37,14 +37,7 @@ public class TicketListActivity extends Activity {
         String duration;
     }
 
-    public static class TicketItem {
-        String trainCode;
-        String fromStation;
-        String toStation;
-        String startTime;
-        String arriveTime;
-        String duration;
-    }
+    
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
