@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.*;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -94,12 +95,11 @@ public class RouteDetailActivity extends Activity {
                 String result = queryTrainRoute(trainCode, queryDate);
                 parseRoute(result);
 
-                runOnUiThread(() -> {
+                safeRunOnUiThread(() -> {
                     if (routeStations.isEmpty()) {
                         tvLoading.setVisibility(View.GONE);
                         progressBar.setVisibility(View.GONE);
                         tvEmpty.setVisibility(View.VISIBLE);
-                        tvEmpty.setText("未获取到路线信息");
                     } else {
                         tvLoading.setVisibility(View.GONE);
                         progressBar.setVisibility(View.GONE);
@@ -112,29 +112,45 @@ public class RouteDetailActivity extends Activity {
                     }
                 });
 
-            } catch (final Exception e) {
-                AppLogger.error("ROUTE", "路线加载失败: " + e.getMessage());
-                runOnUiThread(() -> {
+            } catch (final Throwable t) {
+                AppLogger.error("ROUTE", "路线加载失败: " + t.getMessage());
+                safeRunOnUiThread(() -> {
                     tvLoading.setVisibility(View.GONE);
                     progressBar.setVisibility(View.GONE);
                     tvEmpty.setVisibility(View.VISIBLE);
-                    tvEmpty.setText("路线加载失败: " + e.getMessage());
                     Toast.makeText(RouteDetailActivity.this,
-                            "路线加载失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            "路线加载失败: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 });
             }
         }).start();
     }
 
     /**
+     * 安全地在 UI 线程执行
+     */
+    private void safeRunOnUiThread(final Runnable action) {
+        runOnUiThread(() -> {
+            try {
+                action.run();
+            } catch (Throwable t) {
+                AppLogger.error("ROUTE_UI", "UI 更新异常: " + t.getMessage());
+            }
+        });
+    }
+
+    /**
      * 直接调 12306 API 查询经停站
+     * train_no 参数传车次代码 + 站点信息
      */
     private String queryTrainRoute(String trainCode, String date) throws Exception {
+        // 12306 路线查询 API 需要 train_no（内部编号），但我们也支持直接用车次代码
         String urlStr = QUERY_ROUTE_URL
                 + "?train_no=" + URLEncoder.encode(trainCode, "UTF-8")
                 + "&from_station_telecode="
                 + "&to_station_telecode="
                 + "&depart_date=" + date;
+
+        AppLogger.log("ROUTE", "请求 URL: " + urlStr);
 
         HttpURLConnection conn = (HttpURLConnection) new URL(urlStr).openConnection();
         conn.setConnectTimeout(10000);
@@ -142,6 +158,10 @@ public class RouteDetailActivity extends Activity {
         conn.setRequestProperty("User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
         conn.setRequestProperty("Referer", "https://kyfw.12306.cn/otn/leftTicket/init");
+        conn.setRequestProperty("Accept", "application/json, text/plain, */*");
+
+        int httpCode = conn.getResponseCode();
+        AppLogger.log("ROUTE", "HTTP " + httpCode);
 
         BufferedReader reader = new BufferedReader(
                 new InputStreamReader(conn.getInputStream(), "UTF-8"));
@@ -150,16 +170,27 @@ public class RouteDetailActivity extends Activity {
         while ((line = reader.readLine()) != null) sb.append(line);
         reader.close();
 
-        return sb.toString();
+        String response = sb.toString();
+        AppLogger.log("ROUTE", "响应大小: " + response.length() + " bytes");
+        return response;
     }
 
     /**
      * 解析 12306 API 响应中的经停站数据
+     * 使用 lenient 模式兼容 BOM 等非标准格式
      */
     private void parseRoute(String data) {
         try {
-            JsonObject json = JsonParser.parseString(data).getAsJsonObject();
-            if (json.has("data")) {
+            // 使用 lenient 模式解析，兼容 12306 返回的非标准 JSON
+            JsonObject json = new GsonBuilder().setLenient().create()
+                    .fromJson(data, JsonObject.class);
+
+            if (json == null) {
+                routeStations.add("响应为空，可能参数不正确");
+                return;
+            }
+
+            if (json.has("data") && json.get("data").isJsonObject()) {
                 JsonArray dataArray = json.getAsJsonObject("data").getAsJsonArray("data");
                 if (dataArray != null && dataArray.size() > 0) {
                     // 取第一个车次的数据
@@ -177,12 +208,24 @@ public class RouteDetailActivity extends Activity {
                                     + "  停" + stopTime);
                         }
                     }
+                } else {
+                    routeStations.add("该车次暂无线经停数据（data 数组为空）");
                 }
+            } else {
+                // 尝试显示完整响应帮助调试
+                String preview = data.length() > 200 ? data.substring(0, 200) + "..." : data;
+                routeStations.add("API 返回格式异常，前200字符: " + preview);
+                AppLogger.warn("ROUTE", "API 响应无 data 字段: " + preview);
             }
             AppLogger.log("ROUTE", "解析到 " + routeStations.size() + " 个经停站");
-        } catch (Exception e) {
-            AppLogger.error("ROUTE", "路线解析异常: " + e.getMessage());
-            routeStations.add("解析失败: " + e.getMessage());
+        } catch (Throwable t) {
+            AppLogger.error("ROUTE", "路线解析异常: " + t.getMessage());
+            // 显示原始响应前 500 字符帮助调试
+            String preview = data != null && data.length() > 500
+                    ? data.substring(0, 500) + "..."
+                    : (data != null ? data : "null");
+            routeStations.add("⚠️ 解析失败: " + t.getMessage());
+            routeStations.add("原始响应(前500字符): " + preview);
         }
     }
 
