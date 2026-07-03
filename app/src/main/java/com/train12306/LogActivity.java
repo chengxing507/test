@@ -115,44 +115,54 @@ public class LogActivity extends Activity {
             return;
         }
 
-        // 按修改时间倒序排列
+        // 按修改时间倒序排列（最新的在前）
         Arrays.sort(files, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
 
         StringBuilder sb = new StringBuilder();
         sb.append("=== 历史日志文件 (").append(files.length).append(" 个) ===\n\n");
-        for (int i = 0; i < Math.min(files.length, 10); i++) {
+        sb.append("💡 点击行号查看对应文件\n\n");
+        for (int i = 0; i < files.length; i++) {
             File f = files[i];
             long size = f.length();
             String sizeStr = size < 1024 ? size + "B" : String.format("%.1fKB", size / 1024.0);
-            sb.append("[").append(i + 1).append("] ")
-              .append(f.getName()).append(" (").append(sizeStr).append(")\n");
-        }
-        sb.append("\n文件路径: ").append(dirPath);
+            // 标记日期时间
+            String dateStr = f.getName().replace("app_", "").replace(".log", "");
+            // 格式: yyyyMMdd_HHmmss
+            String displayDate = "";
+            if (dateStr.length() >= 15) {
+                displayDate = dateStr.substring(0,4) + "-" + dateStr.substring(4,6) + "-" + dateStr.substring(6,8)
+                    + " " + dateStr.substring(9,11) + ":" + dateStr.substring(11,13) + ":" + dateStr.substring(13,15);
+            }
+            sb.append("─── 文件 ").append(i + 1).append(" ───────────────────────\n");
+            sb.append("📄 ").append(displayDate).append("\n");
+            sb.append("📏 ").append(sizeStr).append("\n");
+            sb.append("\n");
 
-        // 显示最近一个日志文件的内容预览
-        if (files.length > 0) {
+            // 读取并显示内容（最多 100 行）
             try {
-                BufferedReader reader = new BufferedReader(new FileReader(files[0]));
-                StringBuilder content = new StringBuilder();
+                BufferedReader reader = new BufferedReader(new FileReader(f));
                 String line;
                 int lineCount = 0;
-                while ((line = reader.readLine()) != null && lineCount < 50) {
-                    content.append(line).append("\n");
+                while ((line = reader.readLine()) != null && lineCount < 100) {
+                    sb.append(line).append("\n");
                     lineCount++;
                 }
                 reader.close();
-
-                sb.append("\n\n=== 最新日志预览 (").append(lineCount).append(" 行) ===\n\n");
-                sb.append(content);
-                if (lineCount >= 50) sb.append("... (更多内容请查看文件)");
+                if (lineCount >= 100) {
+                    sb.append("... (仅显示前 100 行，完整文件 ").append(sizeStr).append(")\n");
+                }
             } catch (Exception e) {
-                sb.append("\n\n(读取文件失败: ").append(e.getMessage()).append(")");
+                sb.append("(读取失败: ").append(e.getMessage()).append(")\n");
             }
+            sb.append("\n");
         }
+
+        sb.append("\n=== 文件路径 ===\n").append(dirPath);
+        sb.append("\n\n💡 如需导出，请用 adb 或文件管理器复制此目录");
 
         tvLog.setText(sb.toString());
         scrollView.post(() -> scrollView.fullScroll(ScrollView.FOCUS_DOWN));
 
-        Toast.makeText(this, "已加载历史日志（最近 " + Math.min(files.length, 10) + " 个文件）", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "已加载 " + files.length + " 个历史日志文件", Toast.LENGTH_SHORT).show();
     }
 }
