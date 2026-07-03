@@ -150,14 +150,14 @@ public class MainActivity extends Activity {
             try {
                 // 触发一次查询，会下载并缓存 station_name.js
                 StationDataManager.getStationCode("北京");
-                runOnUiThread(() -> {
+                safeRunOnUiThread(() -> {
                     tvStatus.setText("✅ 站点数据已就绪");
                     progressBar.setVisibility(View.GONE);
                     AppLogger.log("MAIN", "站点数据预加载成功");
                 });
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 AppLogger.warn("MAIN", "站点数据预加载失败: " + e.getMessage());
-                runOnUiThread(() -> {
+                safeRunOnUiThread(() -> {
                     tvStatus.setText("⚠️ 站点数据加载失败，查询时自动重试");
                     progressBar.setVisibility(View.GONE);
                 });
@@ -261,7 +261,7 @@ public class MainActivity extends Activity {
                 // 解析并传递到车次列表页
                 final String parsedData = parseAndFilterTickets(jsonResponse, filterFlags);
 
-                runOnUiThread(() -> {
+                safeRunOnUiThread(() -> {
                     progressBar.setVisibility(View.GONE);
                     Intent intent = new Intent(MainActivity.this, TicketListActivity.class);
                     intent.putExtra("ticket_data", parsedData);
@@ -272,13 +272,13 @@ public class MainActivity extends Activity {
                     tvStatus.setText("✅ 查询完成：" + from + " → " + to);
                 });
 
-            } catch (final Exception e) {
-                AppLogger.error("QUERY", "查询失败: " + e.getMessage());
-                runOnUiThread(() -> {
+            } catch (final Throwable t) {
+                AppLogger.error("QUERY", "查询失败: " + t.getMessage());
+                safeRunOnUiThread(() -> {
                     progressBar.setVisibility(View.GONE);
-                    tvStatus.setText("❌ 查询失败: " + e.getMessage());
+                    tvStatus.setText("❌ 查询失败: " + t.getMessage());
                     Toast.makeText(MainActivity.this,
-                            "查询失败: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            "查询失败: " + t.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
         }).start();
@@ -323,26 +323,40 @@ public class MainActivity extends Activity {
                 }
 
                 result.append(trainCode).append(" ")
-                        .append(stationFromName).append(" ")
-                        .append(stationToName).append(" ")
-                        .append(startTime).append(" ")
-                        .append(arriveTime).append(" ")
-                        .append(duration).append("\n");
-            }
-        } catch (Exception e) {
-            AppLogger.error("QUERY", "解析车次失败: " + e.getMessage());
-            return "解析失败: " + e.getMessage();
-        }
+                                        .append(stationFromName).append(" ")
+                                        .append(stationToName).append(" ")
+                                        .append(startTime).append(" ")
+                                        .append(arriveTime).append(" ")
+                                        .append(duration).append("\n");
+                            }
+                        } catch (Throwable t) {
+                            AppLogger.error("QUERY", "解析车次失败: " + t.getMessage());
+                            return "解析失败: " + t.getMessage();
+                        }
 
-        AppLogger.log("QUERY", "解析到 " + result.toString().split("\n").length + " 个车次");
-        return result.toString().trim();
+                        int count = result.toString().split("\n").length;
+                        AppLogger.log("QUERY", "解析到 " + count + " 个车次");
+                        return result.toString().trim();
+                    }
+
+                    /**
+                     * 安全地在 UI 线程执行，捕获所有异常防止闪退
+     */
+    private void safeRunOnUiThread(final Runnable action) {
+        runOnUiThread(() -> {
+            try {
+                action.run();
+            } catch (Throwable t) {
+                AppLogger.error("UI", "UI 更新异常: " + t.getMessage());
+            }
+        });
     }
 
     /**
      * 在 UI 线程显示错误信息
      */
     private void showError(final String msg) {
-        runOnUiThread(() -> {
+        safeRunOnUiThread(() -> {
             tvStatus.setText("❌ " + msg);
             progressBar.setVisibility(View.GONE);
             Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
@@ -353,6 +367,6 @@ public class MainActivity extends Activity {
      * 在 UI 线程更新状态文字
      */
     private void updateStatus(final String msg) {
-        runOnUiThread(() -> tvStatus.setText(msg));
+        safeRunOnUiThread(() -> tvStatus.setText(msg));
     }
 }
