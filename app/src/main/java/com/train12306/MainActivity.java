@@ -268,6 +268,8 @@ public class MainActivity extends Activity {
                     intent.putExtra("query_date", date);
                     intent.putExtra("from_station", from);
                     intent.putExtra("to_station", to);
+                    intent.putExtra("from_code", fromCode);
+                    intent.putExtra("to_code", toCode);
                     startActivity(intent);
                     tvStatus.setText("✅ 查询完成：" + from + " → " + to);
                 });
@@ -285,59 +287,65 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * 解析 12306 API 返回的 JSON，提取车次文本
-     * 格式：车次 出发站 到达站 出发时间 到达时间 历时
-     */
-    private String parseAndFilterTickets(String json, String filterFlags) {
-        StringBuilder result = new StringBuilder();
+         * 解析 12306 API 返回的 JSON，提取车次文本
+         * 格式：车次 trainNo 出发站 到达站 出发时间 到达时间 历时
+         * trainNo 是 12306 内部编号，用于路线查询
+         */
+        private String parseAndFilterTickets(String json, String filterFlags) {
+            StringBuilder result = new StringBuilder();
 
-        try {
-            JsonObject root = JsonParser.parseString(json).getAsJsonObject();
-            if (!root.get("status").getAsBoolean()) {
-                return "查询失败: " + root.toString();
-            }
-
-            JsonArray results = root.getAsJsonObject("data")
-                    .getAsJsonArray("result");
-
-            for (int i = 0; i < results.size(); i++) {
-                String line = results.get(i).getAsString();
-                String[] parts = line.split("\\|");
-
-                // 字段索引: 3=车次, 6=出发站码, 7=到达站码, 8=出发时间, 9=到达时间, 10=历时
-                String trainCode = parts.length > 3 ? parts[3] : "";
-                String startTime = parts.length > 8 ? parts[8] : "";
-                String arriveTime = parts.length > 9 ? parts[9] : "";
-                String duration = parts.length > 10 ? parts[10] : "";
-
-                // 车次筛选
-                if (!filterFlags.isEmpty()) {
-                    boolean matched = false;
-                    for (char c : filterFlags.toCharArray()) {
-                        if (trainCode.startsWith(String.valueOf(c))) {
-                            matched = true;
-                            break;
-                        }
-                    }
-                    if (!matched) continue;
+            try {
+                JsonObject root = JsonParser.parseString(json).getAsJsonObject();
+                if (!root.get("status").getAsBoolean()) {
+                    return "查询失败: " + root.toString();
                 }
 
-                result.append(trainCode).append(" ")
-                                        .append(stationFromName).append(" ")
-                                        .append(stationToName).append(" ")
-                                        .append(startTime).append(" ")
-                                        .append(arriveTime).append(" ")
-                                        .append(duration).append("\n");
-                            }
-                        } catch (Throwable t) {
-                            AppLogger.error("QUERY", "解析车次失败: " + t.getMessage());
-                            return "解析失败: " + t.getMessage();
-                        }
+                JsonArray results = root.getAsJsonObject("data")
+                        .getAsJsonArray("result");
 
-                        int count = result.toString().split("\n").length;
-                        AppLogger.log("QUERY", "解析到 " + count + " 个车次");
-                        return result.toString().trim();
+                for (int i = 0; i < results.size(); i++) {
+                    String line = results.get(i).getAsString();
+                    String[] parts = line.split("\\|");
+
+                    // 字段索引:
+                    // 2=train_no(内部编号), 3=车次代码, 6=出发站码, 7=到达站码,
+                    // 8=出发时间, 9=到达时间, 10=历时
+                    String trainNo = parts.length > 2 ? parts[2] : "";
+                    String trainCode = parts.length > 3 ? parts[3] : "";
+                    String startTime = parts.length > 8 ? parts[8] : "";
+                    String arriveTime = parts.length > 9 ? parts[9] : "";
+                    String duration = parts.length > 10 ? parts[10] : "";
+
+                    // 车次筛选
+                    if (!filterFlags.isEmpty()) {
+                        boolean matched = false;
+                        for (char c : filterFlags.toCharArray()) {
+                            if (trainCode.startsWith(String.valueOf(c))) {
+                                matched = true;
+                                break;
+                            }
+                        }
+                        if (!matched) continue;
                     }
+
+                    // 格式: 车次 trainNo 出发站 到达站 出发时间 到达时间 历时
+                    result.append(trainCode).append(" ")
+                          .append(trainNo).append(" ")
+                          .append(stationFromName).append(" ")
+                          .append(stationToName).append(" ")
+                          .append(startTime).append(" ")
+                          .append(arriveTime).append(" ")
+                          .append(duration).append("\n");
+                }
+            } catch (Throwable t) {
+                AppLogger.error("QUERY", "解析车次失败: " + t.getMessage());
+                return "解析失败: " + t.getMessage();
+            }
+
+            int count = result.toString().split("\n").length;
+            AppLogger.log("QUERY", "解析到 " + count + " 个车次");
+            return result.toString().trim();
+        }
 
                     /**
                      * 安全地在 UI 线程执行，捕获所有异常防止闪退
