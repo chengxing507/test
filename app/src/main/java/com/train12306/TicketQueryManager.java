@@ -36,7 +36,7 @@ public class TicketQueryManager {
      * @param filterFlags 车次筛选 (G/D/Z/T/K...)，空字符串表示全部
      * @return 12306 API 返回的原始 JSON 字符串
      */
-    public static String queryTickets(String date, String fromCode, String toCode, String filterFlags)
+    public static synchronized String queryTickets(String date, String fromCode, String toCode, String filterFlags)
             throws Exception {
 
         // 1. 获取 Cookie
@@ -85,7 +85,7 @@ public class TicketQueryManager {
     /**
      * 确保已获取 12306 Cookie
      */
-    private static void ensureCookie() throws Exception {
+    private static synchronized void ensureCookie() throws Exception {
         HttpURLConnection conn = (HttpURLConnection) new URL(INIT_URL).openConnection();
         conn.setConnectTimeout(10000);
         conn.setReadTimeout(10000);

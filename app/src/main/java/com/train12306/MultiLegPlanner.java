@@ -335,6 +335,8 @@ public class MultiLegPlanner {
     private List<TrainInfo> queryDirectTrains(String fromName, String toName) {
         List<TrainInfo> list = new ArrayList<>();
         if (isCancelled()) return list;
+        // 限速保护：每次 API 调用间隔 300ms，防止 12306 限流
+        try { Thread.sleep(300); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
         try {
             String fromCode = StationDataManager.getStationCode(fromName);
             String toCode = StationDataManager.getStationCode(toName);
