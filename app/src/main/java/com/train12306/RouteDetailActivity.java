@@ -38,6 +38,7 @@ public class RouteDetailActivity extends Activity {
     private final List<String> routeStations = new ArrayList<>();
     private String trainCode, queryDate;
     private String fromStation, toStation, startTime, arriveTime, duration;
+    private String trainNo, fromCode, toCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,9 +56,12 @@ public class RouteDetailActivity extends Activity {
 
         // 获取传入数据
         trainCode = getIntent().getStringExtra("train_code");
+        trainNo = getIntent().getStringExtra("train_no");
         queryDate = getIntent().getStringExtra("query_date");
         fromStation = getIntent().getStringExtra("from_station");
         toStation = getIntent().getStringExtra("to_station");
+        fromCode = getIntent().getStringExtra("from_code");
+        toCode = getIntent().getStringExtra("to_code");
         startTime = getIntent().getStringExtra("start_time");
         arriveTime = getIntent().getStringExtra("arrive_time");
         duration = getIntent().getStringExtra("duration");
@@ -92,7 +96,8 @@ public class RouteDetailActivity extends Activity {
 
         new Thread(() -> {
             try {
-                String result = queryTrainRoute(trainCode, queryDate);
+                // 使用 train_no（内部编号）查询路线，配合站点代码
+                String result = queryTrainRoute(trainNo, queryDate, fromCode, toCode);
                 parseRoute(result);
 
                 safeRunOnUiThread(() -> {
@@ -140,14 +145,18 @@ public class RouteDetailActivity extends Activity {
 
     /**
      * 直接调 12306 API 查询经停站
-     * train_no 参数传车次代码 + 站点信息
+     * 使用 train_no（内部编号）+ 站点代码
      */
-    private String queryTrainRoute(String trainCode, String date) throws Exception {
-        // 12306 路线查询 API 需要 train_no（内部编号），但我们也支持直接用车次代码
+    private String queryTrainRoute(String trainNo, String date, String fromCode, String toCode) throws Exception {
+        // 优先使用 train_no，如果为空则降级用车次代码
+        String trainId = (trainNo != null && !trainNo.isEmpty()) ? trainNo : trainCode;
+        String fromTc = (fromCode != null && !fromCode.isEmpty()) ? fromCode : "";
+        String toTc = (toCode != null && !toCode.isEmpty()) ? toCode : "";
+
         String urlStr = QUERY_ROUTE_URL
-                + "?train_no=" + URLEncoder.encode(trainCode, "UTF-8")
-                + "&from_station_telecode="
-                + "&to_station_telecode="
+                + "?train_no=" + URLEncoder.encode(trainId, "UTF-8")
+                + "&from_station_telecode=" + URLEncoder.encode(fromTc, "UTF-8")
+                + "&to_station_telecode=" + URLEncoder.encode(toTc, "UTF-8")
                 + "&depart_date=" + date;
 
         AppLogger.log("ROUTE", "请求 URL: " + urlStr);
