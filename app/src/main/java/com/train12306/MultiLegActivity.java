@@ -256,24 +256,21 @@ public class MultiLegActivity extends Activity {
             public void onProgress(String msg) {
                 runOnUiThread(() -> {
                     setStatus(msg);
-                    appendLog(msg + "
-");
+                    appendLog(msg + "\n");
                 });
             }
             @Override
             public void onProgressPercent(int current, int total, String message) {
                 runOnUiThread(() -> {
                     updateProgress(current, total);
-                    appendLog(String.format("[%d/%d] %s
-", current, total, message));
+                    appendLog(String.format("[%d/%d] %s\n", current, total, message));
                 });
             }
             @Override
             public void onError(String msg) {
                 runOnUiThread(() -> {
                     setStatus("❌ " + msg);
-                    appendLog("❌ " + msg + "
-");
+                    appendLog("❌ " + msg + "\n");
                 });
             }
             @Override
@@ -288,20 +285,17 @@ public class MultiLegActivity extends Activity {
                 String apiKey = prefs.getString("api_key", "");
                 String modelName = prefs.getString("model_name", "");
                 if (!baseUrl.isEmpty() && !apiKey.isEmpty()) {
-                    appendLog("🤖 AI 正在预筛选枢纽站，请稍候...
-");
+                    appendLog("🤖 AI 正在预筛选枢纽站，请稍候...\n");
                     updateStatus("🤖 AI 正在预筛选枢纽站...");
                     final boolean filtered = planner.filterHubsByAI(from, to, baseUrl, apiKey, modelName);
                     if (filtered) {
                         int count = planner.getActiveHubs().size();
                         String msg = String.format("🤖 AI 筛选后保留 %d 个枢纽站", count);
-                        appendLog(msg + "
-");
+                        appendLog(msg + "\n");
                         updateStatus(msg);
                     } else {
                         String msg = "⚠️ AI 筛选失败，使用全部枢纽站";
-                        appendLog(msg + "
-");
+                        appendLog(msg + "\n");
                         updateStatus(msg);
                     }
                 }
@@ -368,8 +362,7 @@ public class MultiLegActivity extends Activity {
         if (querying) {
             setStatus("正在查询...");
             clearLiveLog();
-            appendLog("▶ 开始查询
-");
+            appendLog("▶ 开始查询\n");
         }
     }
 
