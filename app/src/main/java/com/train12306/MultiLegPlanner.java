@@ -376,6 +376,11 @@ public class MultiLegPlanner {
      * 通过枢纽站查找中转路径（带进度报告）
      */
     private List<Path> findHubTransferPaths(String from, String to, int level, Set<String> visited) {
+        return findHubTransferPaths(from, to, level, visited, true);
+    }
+
+    /** 内部版本，countProgress=false 时跳过进度计数（用于递归调用） */
+    private List<Path> findHubTransferPaths(String from, String to, int level, Set<String> visited, boolean countProgress) {
         List<Path> result = new ArrayList<>();
         if (isCancelled() || level <= 0) return result;
 
@@ -392,8 +397,8 @@ public class MultiLegPlanner {
             hubList = new ArrayList<>(HUBS.entrySet());
         }
 
-        // 首次进入时初始化计数器
-        if (progressTotal == 0) {
+        // 首次进入时初始化计数器（只在顶层计数）
+        if (countProgress && progressTotal == 0) {
             progressTotal = hubList.size();
             progressCurrent = 0;
         }
@@ -403,16 +408,18 @@ public class MultiLegPlanner {
             String hubCode = hub.getKey();
             String hubName = hub.getValue();
 
-            progressCurrent++;
-            // 确保不超 total（递归调用可能超限，UI 也做 cap）
-            int displayCurrent = Math.min(progressCurrent, progressTotal);
-            int pct = progressTotal > 0 ? Math.min(100, (int)((float)displayCurrent / progressTotal * 100)) : 0;
-            String progMsg = String.format("🔍 枢纽站 %s (%d/%d) %d%% | %s → %s → %s",
-                    hubName, displayCurrent, progressTotal, pct, from, hubName, to);
-            log(progMsg);
-            // 通知带百分比的进度
-            if (callback != null) callback.onProgressPercent(displayCurrent, progressTotal,
-                    String.format("正在查询 %s → %s 的列车...", from, hubName));
+            if (countProgress) {
+                progressCurrent++;
+                int pct = progressTotal > 0 ? (int)((float)progressCurrent / progressTotal * 100) : 0;
+                String progMsg = String.format("🔍 枢纽站 %s (%d/%d) %d%% | %s → %s → %s",
+                        hubName, progressCurrent, progressTotal, pct, from, hubName, to);
+                log(progMsg);
+                if (callback != null) callback.onProgressPercent(progressCurrent, progressTotal,
+                        String.format("正在查询 %s → %s 的列车...", from, hubName));
+            } else {
+                // 递归调用只显示文本，不计数
+                log(String.format("  ↪ 递归查询: %s → %s → %s", from, hubName, to));
+            }
 
             // 跳过已经过站
             if (visited.contains(hubName) || visited.contains(hubCode)) continue;
@@ -449,8 +456,8 @@ public class MultiLegPlanner {
                     if (result.size() > 100) break;
                 }
             } else {
-                // 深层递归
-                List<Path> subPaths = findHubTransferPaths(hubName, to, level - 1, newVisited);
+                // 深层递归（不计数进度）
+                List<Path> subPaths = findHubTransferPaths(hubName, to, level - 1, newVisited, false);
                 for (Path sub : subPaths) {
                     if (isCancelled()) break;
                     for (TrainInfo first : firstLegs) {
