@@ -25,7 +25,17 @@ public class TicketListActivity extends Activity {
     private ProgressBar progressBar;
 
     private final List<TicketItem> ticketList = new ArrayList<>();
-    private String queryDate, fromStation, toStation;
+    private String queryDate, fromStation, toStation, fromCode, toCode;
+
+    public static class TicketItem {
+        String trainCode;
+        String trainNo;   // 12306 内部车次编号，用于路线查询
+        String fromStation;
+        String toStation;
+        String startTime;
+        String arriveTime;
+        String duration;
+    }
 
     public static class TicketItem {
         String trainCode;
@@ -49,6 +59,8 @@ public class TicketListActivity extends Activity {
         queryDate = getIntent().getStringExtra("query_date");
         fromStation = getIntent().getStringExtra("from_station");
         toStation = getIntent().getStringExtra("to_station");
+        fromCode = getIntent().getStringExtra("from_code");
+        toCode = getIntent().getStringExtra("to_code");
         String ticketData = getIntent().getStringExtra("ticket_data");
 
         // 先显示加载状态
@@ -96,35 +108,36 @@ public class TicketListActivity extends Activity {
     }
 
     /**
-     * 解析车次文本
-     * 格式: "车次 出发站 到达站 出发时间 到达时间 历时"
-     */
-    private void parseTickets(String data) {
-        if (data == null || data.isEmpty()) {
-            AppLogger.warn("TICKET", "车次数据为空");
-            return;
-        }
+         * 解析车次文本
+         * 格式: "车次 trainNo 出发站 到达站 出发时间 到达时间 历时"
+         */
+        private void parseTickets(String data) {
+            if (data == null || data.isEmpty()) {
+                AppLogger.warn("TICKET", "车次数据为空");
+                return;
+            }
 
-        String[] lines = data.split("\\n");
-        for (String line : lines) {
-            line = line.trim();
-            if (line.isEmpty() || line.startsWith("查询失败") || line.startsWith("解析失败")) {
-                continue;
+            String[] lines = data.split("\\\\n");
+            for (String line : lines) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("查询失败") || line.startsWith("解析失败")) {
+                    continue;
+                }
+                String[] parts = line.split("\\\\s+");
+                if (parts.length >= 6) {
+                    TicketItem item = new TicketItem();
+                    item.trainCode = parts[0];
+                    item.trainNo = parts[1];
+                    item.fromStation = parts.length > 2 ? parts[2] : fromStation;
+                    item.toStation = parts.length > 3 ? parts[3] : toStation;
+                    item.startTime = parts.length > 4 ? parts[4] : "";
+                    item.arriveTime = parts.length > 5 ? parts[5] : "";
+                    item.duration = parts.length > 6 ? parts[6] : "";
+                    ticketList.add(item);
+                }
             }
-            String[] parts = line.split("\\s+");
-            if (parts.length >= 5) {
-                TicketItem item = new TicketItem();
-                item.trainCode = parts[0];
-                item.fromStation = parts.length > 1 ? parts[1] : fromStation;
-                item.toStation = parts.length > 2 ? parts[2] : toStation;
-                item.startTime = parts.length > 3 ? parts[3] : "";
-                item.arriveTime = parts.length > 4 ? parts[4] : "";
-                item.duration = parts.length > 5 ? parts[5] : "";
-                ticketList.add(item);
-            }
+            AppLogger.log("TICKET", "解析到 " + ticketList.size() + " 个车次");
         }
-        AppLogger.log("TICKET", "解析到 " + ticketList.size() + " 个车次");
-    }
 
     // ======================== 列表适配器 ========================
 
@@ -168,9 +181,12 @@ public class TicketListActivity extends Activity {
                 TicketItem t = ticketList.get(pos);
                 Intent intent = new Intent(TicketListActivity.this, RouteDetailActivity.class);
                 intent.putExtra("train_code", t.trainCode);
+                intent.putExtra("train_no", t.trainNo);
                 intent.putExtra("query_date", queryDate);
                 intent.putExtra("from_station", t.fromStation);
                 intent.putExtra("to_station", t.toStation);
+                intent.putExtra("from_code", fromCode);
+                intent.putExtra("to_code", toCode);
                 intent.putExtra("start_time", t.startTime);
                 intent.putExtra("arrive_time", t.arriveTime);
                 intent.putExtra("duration", t.duration);
