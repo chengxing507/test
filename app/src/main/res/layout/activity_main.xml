@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/md3_background">
+    android:background="#FDFCFF">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,58 +11,41 @@
         android:gravity="center_horizontal"
         android:padding="20dp">
 
-        <!-- 应用标题 -->
+        <!-- 标题 -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="🚄 智慧铁路"
             android:textSize="28sp"
             android:textStyle="bold"
-            android:textColor="@color/md3_primary"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="12306 智能助手 - BetterRailway 2.0"
-            android:textSize="13sp"
-            android:textColor="@color/md3_outline"
+            android:textColor="#1976D2"
             android:layout_marginBottom="20dp" />
 
-        <!-- 状态卡片 -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- 状态栏 -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardElevation="1dp"
-            app:cardCornerRadius="8dp"
-            app:strokeColor="@color/md3_outline_variant"
-            app:strokeWidth="1dp">
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="10dp"
+            android:background="#F0F0F0"
+            android:layout_marginBottom="16dp">
 
-            <LinearLayout
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tv_status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="12dp"
-                android:background="@color/md3_surface_variant">
-
-                <ProgressBar
-                    android:id="@+id/progress_bar"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/tv_status"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="就绪 ✅"
-                    android:textSize="13sp"
-                    android:textColor="@color/md3_on_surface_variant"
-                    android:layout_marginStart="8dp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                android:text="就绪 ✅"
+                android:textSize="13sp"
+                android:textColor="#666666"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
 
         <!-- 出发站 -->
         <TextView
@@ -72,33 +54,26 @@
             android:text="🚉 出发站"
             android:textStyle="bold"
             android:textSize="15sp"
-            android:textColor="@color/md3_on_surface"
+            android:textColor="#1A1C1E"
             android:layout_marginBottom="4dp" />
 
-        <com.google.android.material.textfield.TextInputLayout
+        <EditText
+            android:id="@+id/et_from"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-            android:hint="输入出发站名，如：北京南">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_from"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text" />
-        </com.google.android.material.textfield.TextInputLayout>
+            android:layout_height="48dp"
+            android:hint="输入出发站名，如：北京南"
+            android:padding="8dp"
+            android:background="@android:drawable/editbox_background"
+            android:layout_marginBottom="8dp" />
 
         <!-- 交换按钮 -->
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/btn_swap"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:text="⇅"
             android:textSize="22sp"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_marginBottom="8dp"
-            app:cornerRadius="24dp" />
+            android:layout_marginBottom="8dp" />
 
         <!-- 到达站 -->
         <TextView
@@ -107,22 +82,17 @@
             android:text="🏁 到达站"
             android:textStyle="bold"
             android:textSize="15sp"
-            android:textColor="@color/md3_on_surface"
+            android:textColor="#1A1C1E"
             android:layout_marginBottom="4dp" />
 
-        <com.google.android.material.textfield.TextInputLayout
+        <EditText
+            android:id="@+id/et_to"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-            android:hint="输入到达站名，如：上海虹桥">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_to"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text" />
-        </com.google.android.material.textfield.TextInputLayout>
+            android:layout_height="48dp"
+            android:hint="输入到达站名，如：上海虹桥"
+            android:padding="8dp"
+            android:background="@android:drawable/editbox_background"
+            android:layout_marginBottom="16dp" />
 
         <!-- 日期 -->
         <TextView
@@ -131,63 +101,59 @@
             android:text="📅 出发日期"
             android:textStyle="bold"
             android:textSize="15sp"
-            android:textColor="@color/md3_on_surface"
+            android:textColor="#1A1C1E"
             android:layout_marginBottom="4dp" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/btn_date"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:gravity="start|center_vertical"
-            android:paddingHorizontal="16dp"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:paddingLeft="16dp"
             android:layout_marginBottom="12dp" />
 
         <!-- 筛选按钮 -->
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/btn_filter"
             android:layout_width="match_parent"
             android:layout_height="44dp"
             android:text="🎯 车次筛选"
-            style="@style/Widget.Material3.Button.TonalButton"
             android:layout_marginBottom="16dp" />
 
         <!-- 查询按钮 -->
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/btn_query"
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:text="🔍 查询车票"
             android:textSize="18sp"
-            style="@style/Widget.Material3.Button"
+            android:textColor="#FFFFFF"
+            android:background="#1976D2"
             android:layout_marginBottom="12dp" />
 
-        <!-- 功能按钮组 -->
-        <com.google.android.material.button.MaterialButton
+        <!-- 功能按钮 -->
+        <Button
             android:id="@+id/btn_multi_leg"
             android:layout_width="match_parent"
             android:layout_height="46dp"
             android:text="🔄 换乘规划"
             android:textSize="15sp"
-            style="@style/Widget.Material3.Button.TonalButton"
             android:layout_marginBottom="6dp" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/btn_settings"
             android:layout_width="match_parent"
             android:layout_height="46dp"
             android:text="⚙️ AI API 设置"
             android:textSize="15sp"
-            style="@style/Widget.Material3.Button.TonalButton"
             android:layout_marginBottom="6dp" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/btn_log"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:text="📋 运行日志"
-            android:textSize="14sp"
-            style="@style/Widget.Material3.Button.TextButton" />
+            android:textSize="14sp" />
 
     </LinearLayout>
 </ScrollView>

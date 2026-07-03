@@ -41,6 +41,19 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // 全局异常捕获 - 显示错误信息而不是闪退
+        final Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            String errorMsg = "崩溃: " + throwable.getMessage() + "\n" + 
+                android.util.Log.getStackTraceString(throwable);
+            AppLogger.error("CRASH", errorMsg);
+            // 如果默认处理器存在，交给它处理（会显示系统崩溃对话框）
+            if (defaultHandler != null) {
+                defaultHandler.uncaughtException(thread, throwable);
+            }
+        });
+        
         setContentView(R.layout.activity_main);
 
         initViews();
