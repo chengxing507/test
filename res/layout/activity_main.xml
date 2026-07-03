@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="12306 智能助手"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#1976D2"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 出发站 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="出发站"
+            android:textStyle="bold"
+            android:textSize="16sp" />
+        <EditText
+            android:id="@+id/et_from"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="输入出发站名，如：北京南"
+            android:padding="8dp"
+            android:background="@android:drawable/editbox_background"
+            android:layout_marginBottom="8dp" />
+
+        <!-- 交换按钮 -->
+        <Button
+            android:id="@+id/btn_swap"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="⇅"
+            android:textSize="20sp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- 到达站 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="到达站"
+            android:textStyle="bold"
+            android:textSize="16sp" />
+        <EditText
+            android:id="@+id/et_to"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="输入到达站名，如：上海虹桥"
+            android:padding="8dp"
+            android:background="@android:drawable/editbox_background"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 日期 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="出发日期"
+            android:textStyle="bold"
+            android:textSize="16sp" />
+        <Button
+            android:id="@+id/btn_date"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:gravity="start|center_vertical"
+            android:padding="8dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 筛选 -->
+        <Button
+            android:id="@+id/btn_filter"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="车次筛选"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 查询 -->
+        <Button
+            android:id="@+id/btn_query"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="查询车票"
+            android:textSize="18sp"
+            android:textColor="#FFFFFF"
+            android:background="#1976D2"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 设置 -->
+        <Button
+            android:id="@+id/btn_settings"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="AI API 设置"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btn_log"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="📋 运行日志"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+</ScrollView>

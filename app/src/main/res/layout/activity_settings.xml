@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AI API 配置"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#1976D2"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="支持 OpenAI / DeepSeek / 通义千问等兼容接口"
+            android:textSize="13sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="API 地址"
+            android:textStyle="bold"
+            android:textSize="15sp" />
+        <EditText
+            android:id="@+id/et_base_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="https://api.openai.com/v1/chat/completions"
+            android:inputType="textUri"
+            android:padding="8dp"
+            android:background="@android:drawable/editbox_background"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="API 密钥"
+            android:textStyle="bold"
+            android:textSize="15sp" />
+        <EditText
+            android:id="@+id/et_api_key"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="sk-..."
+            android:inputType="textPassword"
+            android:padding="8dp"
+            android:background="@android:drawable/editbox_background"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="模型名称"
+            android:textStyle="bold"
+            android:textSize="15sp" />
+        <EditText
+            android:id="@+id/et_model_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="deepseek-v4-flash"
+            android:padding="8dp"
+            android:background="@android:drawable/editbox_background"
+            android:layout_marginBottom="24dp" />
+
+        <!-- AI 连接状态 -->
+        <TextView
+            android:id="@+id/tv_ai_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="13sp"
+            android:padding="4dp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- 加载指示器 -->
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="保存配置"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/btn_test"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="测试 AI 连接"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/btn_back"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="返回" />
+
+        <Button
+            android:id="@+id/btn_log"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="查看运行日志"
+            android:layout_marginTop="8dp" />
+
+        <Button
+            android:id="@+id/btn_export_config"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="📤 导出配置"
+            android:layout_marginTop="8dp" />
+
+        <Button
+            android:id="@+id/btn_import_config"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="📥 导入配置"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="#999999"
+            android:padding="16dp"
+            android:text="提示：API密钥仅保存在手机本地。\nAI分析时会将车次信息发到您配置的API地址。\n推荐使用国产大模型（DeepSeek、通义千问等）。" />
+
+    </LinearLayout>
+</ScrollView>

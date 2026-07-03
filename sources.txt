@@ -1,0 +1,10 @@
+src/com/train12306/MainActivity.java
+src/com/train12306/MCPClient.java
+src/com/train12306/TicketListActivity.java
+src/com/train12306/RouteDetailActivity.java
+src/com/train12306/AIAnalysisClient.java
+src/com/train12306/AIAnalysisActivity.java
+src/com/train12306/SettingsActivity.java
+src/com/train12306/AppLogger.java
+src/com/train12306/ButtonGuard.java
+src/com/train12306/LogActivity.java

@@ -1,199 +1,88 @@
-# 自动回复判断插件
+<div align="center">
 
-用于 **AstrBot**，将群聊消息提交至语言模型进行语义分析，智能判断是否需要触发自动回复，避免无关消息对群聊造成干扰。
+# 🚄 BetterRailway — 12306 智能助手
 
----
+**BetterRailway** is an Android app that queries China Railway (12306) train schedules and seat availability directly — no MCP server required.
 
-## 功能特性
+**BetterRailway** 是一款直接调用 12306 官方 API 查询余票的 Android App，无需依赖任何 MCP 服务器。
 
-- **基于语言模型的智能判断** — 将当前消息及近期上下文提交至语言模型，由模型判断是否应当回复。
-- **群内开关指令** — 在群聊中发送 `/reply` 即可开启或关闭当前群的自动回复判断功能。
-- **独立判断模型** — 可选择独立的轻量模型用于判断，降低调用成本，主模型仍用于实际对话。
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Android](https://img.shields.io/badge/Platform-Android-brightgreen)](https://developer.android.com)
+[![API](https://img.shields.io/badge/API-21%2B-success)](app/src/main/AndroidManifest.xml)
 
----
-
-## 安装方法
-
-将插件目录放入 `data/plugins/`，重载插件，然后在管理面板中启用即可。
+</div>
 
 ---
 
-## 配置说明
+## ✨ Features / 功能
 
-| 配置项 | 说明 | 默认值 |
-|-------|------|--------|
-| `enabled` | 插件总开关 | `true` |
-| `judge_provider` | 用于判断的模型提供商（下拉选择；留空则使用当前对话模型） | 空 |
-| `judge_prompt` | 判断用提示词模板（可用变量：`{message}` `{context}` `{sender}`） | 见下方 |
-| `context_size` | 作为上下文参考的最近消息条数（设为 0 则不传递上下文） | `3` |
-| `history_maxlen` | 本地缓存的历史消息最大条数（仅影响本地缓存，不等同于传给 LLM 的上下文数量） | `10` |
-| `reply_chance` | 模型判定无需回复时仍有概率回复（0-100） | `20` |
+| English | 中文 |
+|---------|------|
+| 🔍 Query real-time train schedules & seat availability | 🔍 查询实时余票与列车时刻 |
+| 🚉 Direct 12306 API calls, no MCP server needed | 🚉 直连 12306 官方 API，无需 MCP |
+| 📅 Date picker with past-date protection | 📅 日期选择器，禁止过去日期 |
+| 🎯 Train type filter (G/D/Z/T/K) | 🎯 高铁/动车/直达/特快/快速 筛选 |
+| 🛤️ Route detail with all stops | 🛤️ 经停站列表，点击查看全部站点 |
+| 🤖 AI analysis (optional, requires your own API key) | 🤖 AI 智能分析（可选，需自备 API Key） |
+| 🌐 Works offline for station data once cached | 🌐 站点数据首次加载后缓存，离线可用 |
+| 📦 Export/import config as JSON | 📦 配置导出/导入为 JSON 文件 |
 
-### 默认判断提示词
+## 📱 Screenshots / 截图
 
-```
-你是一个群聊机器人助手，请判断以下群聊消息是否需要你回复。
+| Query / 查询页 | Ticket List / 车次列表 | Route Detail / 路线详情 | Settings / 设置 |
+|:---:|:---:|:---:|:---:|
+| ![query](screenshots/query.png) | ![list](screenshots/list.png) | ![route](screenshots/route.png) | ![settings](screenshots/settings.png) |
 
-判断标准：
-1. 消息中提到了机器人名称或@了机器人 → 需要回复
-2. 消息在提问、请求帮助 → 需要回复
-3. 消息在跟机器人聊天互动 → 需要回复
-4. 普通闲聊、与机器人无关 → 不需要回复
-5. 纯表情、无意义消息 → 不需要回复
+## 🚀 Quick Start / 快速开始
 
-请严格用以下JSON格式回复（只输出JSON）：
-{"should_reply": true/false, "confidence": 0-100, "reason": "简短原因"}
+### Download / 下载
 
-当前消息：
-{message}
+Grab the latest APK from the [Releases page](https://github.com/chengxing507/BetterRailway/releases).
 
-最近上下文：
-{context}
-```
+从 [Releases 页面](https://github.com/chengxing507/BetterRailway/releases) 下载最新 APK。
 
-**可用变量：** `{message}`（当前消息）、`{context}`（上下文）、`{sender}`（发送者昵称）
+### Setup / 配置
 
----
+1. **Install** the APK on your Android device (API 21+)
+2. **Optional**: Go to **Settings → AI API 设置**, fill in your LLM API endpoint & key if you want AI analysis
+3. **Enter** departure & arrival station names (Chinese), pick a date, tap **查询车票**
 
-## 群聊指令
-
-在群聊中发送以下指令：
-
-```
-/reply
-```
-
-切换当前群的自动回复判断开关。也可直接指定状态：`/reply true` 或 `/reply false`。
-
-> 🧠 **开关状态持久化：** 群开关会自动保存到 `_group_switches.json` 文件中，重启 AstrBot 后自动恢复，无需每次重新设置。
+That's it — no MCP server, no extra setup needed.
 
 ---
 
-## 工作原理
+1. **安装** APK（Android 5.0 以上）
+2. **可选**：如需 AI 分析功能，进入 **设置 → AI API 设置** 填写 API 地址和密钥
+3. **输入** 出发站/到达站、选择日期，点击 **查询车票**
 
-```
-收到群聊消息
-    │
-    ├─ on_group_message：记录消息历史，执行快速检查
-    │
-    └─ on_llm_request（在主模型调用前触发）
-         │
-         ├─ 缓存命中 → 直接应用缓存的判断结果
-         │
-         └─ 调用判断模型 →
-              ├─ "需要回复"     → 放行，主模型正常生成回复
-              ├─ "无需回复"     → 终止事件，不调用主模型，不发送回复
-              └─ 概率命中       → 尽管模型判定无需回复，仍然放行
+搞定，无需任何 MCP 服务器配置。
+
+## 🔧 Build from Source / 自行编译
+
+```bash
+git clone https://github.com/chengxing507/BetterRailway.git
+cd BetterRailway
+./gradlew assembleDebug
 ```
 
-## 关于拦截时出现的 ERROR 日志
+APK will be at `app/build/outputs/apk/debug/app-debug.apk`.
 
-当插件判定消息无需回复并终止流水线时，AstrBot 内置处理器会因生成器提前关闭而产生 `GeneratorExit` 异常。这是 Python 生成器被正常关闭时的标准行为，日志中会显示以下内容：
-
-```
-[ERRO] [astrbot.main:222]: Traceback (most recent call last):
-File "...", line ..., in on_message
-    yield event.request_llm(
-GeneratorExit
-[ERRO] [astrbot.main:223]: 主动回复失败:
-```
-
-该异常**不影响任何功能**，消息已被成功拦截，不会发送到群聊。插件在初始化时通过 `logging.Filter` 自动过滤此类日志，确保控制台输出整洁。
-
----
-
-本插件由 **DeepSeek-V4** 完成核心代码开发，**chengxing507** 完成调试与功能改进。
-
----
-
-## 开源许可
-
-本项目采用 **MIT 许可证**。
-
-简单来说：你可以自由使用、修改、分发本插件，包括用于商业项目，只需保留原版权声明即可。不提供任何明示或暗示的担保。
-
----
-
-## 文件结构
+## 🏗 Architecture / 架构
 
 ```
-astrbot_plugin_autoreply_judge/
-├── metadata.yaml
-├── _conf_schema.json
-├── main.py
-├── README.md
-├── README_EN.md
-└── LICENSE
-
----
-
-## 更新日志
-### v1.2.3.1 (2026-07-01)
-
-#### 修复
-- 修复了 v1.2.3 版本更新间接导致的配置项缺失
-
-### v1.2.3 (2026-07-01)
-
-#### 修复
-- 修复非白名单群的 @ 消息仍会触发主 LLM 回复的问题
-
-### v1.2.2 (2026-07-01)
-
-#### 修复
-- 修复 Bot 被 @ 时不能跳过 LLM 判断而直接回复的问题
-
-### v1.2.1 (2026-07-01)
-
-#### 新功能
-- 更新"群聊白名单"功能
-
-### v1.2.0 (2026-06-30)
-
-#### 修复
-- 修复了部分场景下插件不生效的问题
-
-### v1.1.1 (2026-06-29)
-
-#### 修复
-- 修复 `_judging_groups` 并发竞争导致的多余 LLM 调用
-- 修复 `/reply` 多群同时开关导致状态丢失
-- 修复开关文件崩溃损坏问题（改为原子写入）
-- 修复关闭 `enabled` 后仍消耗 token 的问题
-- 修复缓存清理频率翻倍问题
-- 修复写路径缓存未清理导致内存泄漏
-- 修复缓存写入时窗口期多余 LLM 调用（double-check）
-- 修复 `bool("false")` 误判为 `True` 导致拦截失败
-- 修复 `toggle_reply()` 内 yield 导致锁泄漏
-- 修复 `terminate()` 卸载时与 `/reply` 的竞态
-- 修复群 ID `"0"` 被误判为非群消息
-- 修复缓存清理异常导致消息处理中断
-- 补全概率放行日志缺失的 confidence 字段
-- 补全 `_conf_schema.json` 中 `{sender}` 变量说明
-
-### v1.1 (2026-06-29)
-
-#### 新功能
-- **私信屏蔽** — 非群聊消息不再触发判断逻辑，避免误处理
-- **递归保护** — 增加 `_judging` 标志，防止 `on_llm_request` 被内部 LLM 调用递归触发
-
-#### 优化
-- **缓存过期机制** — 新增 120s TTL 缓存自动清理，防止内存泄漏
-- **超时保护** — LLM 判断加入 15s 超时兜底，超时自动放行
-- **JSON 解析增强** — 栈匹配法 + 尾部逗号修复，容错能力大幅提升
-- **开关持久化** — 群开关状态自动保存到文件，重启后恢复
-
-### v1.0.1
-
-#### 修复
-- 修复 metadata 描述字段
-- 优化日志输出格式
-
-### v1.0.0
-
-#### 新功能
-- 首个正式版本
-- 基础 LLM 自动回复判断功能
-- 群内 `/reply` 开关指令
-- 概率冒泡机制
+MainActivity          →  User input & query trigger
+├─ StationDataManager →  Downloads & caches station name → code mapping from 12306
+├─ TicketQueryManager →  Calls 12306 API (kyfw.12306.cn) directly
+├─ TicketListActivity →  Displays parsed train schedules
+│  └─ RouteDetailActivity →  Shows all stops for a train
+├─ SettingsActivity   →  AI API config (optional)
+└─ AIAnalysisClient   →  Sends train info to your LLM API for smart recommendations
 ```
+
+The app communicates directly with `kyfw.12306.cn` — there is zero dependency on any MCP middleware.
+
+App 直接与 `kyfw.12306.cn` 通信，不依赖任何 MCP 中间件。
+
+## 📄 License / 许可证
+
+[MIT](LICENSE) © 2026 chengxing507

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.train12306">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="23" />
+
+    <application
+        android:allowBackup="true"
+        android:label="12306智能助手"
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
+        
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="12306智能助手">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <activity
+            android:name=".TicketListActivity"
+            android:label="查询结果" />
+        
+        <activity
+            android:name=".SettingsActivity"
+            android:label="AI设置" />
+        
+        <activity
+            android:name=".RouteDetailActivity"
+            android:label="路线详情" />
+            
+        <activity
+            android:name=".AIAnalysisActivity"
+            android:label="AI分析"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <activity
+            android:name=".LogActivity"
+            android:label="运行日志"
+            android:theme="@style/AppTheme.NoBar" />
+    </application>
+</manifest>
