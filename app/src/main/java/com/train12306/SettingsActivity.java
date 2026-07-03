@@ -38,7 +38,7 @@ public class SettingsActivity extends Activity {
 
     private EditText etBaseUrl, etApiKey, etModelName;
     private TextView tvAiStatus;
-    private ProgressBar progressBar;
+    private com.google.android.material.progressindicator.LinearProgressIndicator progressBar;
     private SharedPreferences prefs;
     private Gson gson = new GsonBuilder().setPrettyPrinting().create();
 

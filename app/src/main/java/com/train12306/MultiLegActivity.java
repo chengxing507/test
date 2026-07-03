@@ -36,7 +36,6 @@ public class MultiLegActivity extends Activity {
     private CheckBox cbAiFilterHubs;
     private Button btnAddWaypoint, btnQuery, btnCancel, btnBack;
     private Button btnSortTime, btnSortPrice, btnAiFilter, btnAiConfig;
-    private ProgressBar progressBar;
     private TextView tvStatus, tvEmpty, tvResultCount;
     private ListView listPaths;
 
@@ -88,7 +87,6 @@ public class MultiLegActivity extends Activity {
         btnSortPrice = findViewById(R.id.btn_sort_price);
         btnAiFilter = findViewById(R.id.btn_ai_filter);
         btnAiConfig = findViewById(R.id.btn_ai_config);
-        progressBar = findViewById(R.id.progress_bar);
         tvStatus = findViewById(R.id.tv_status);
         tvEmpty = findViewById(R.id.tv_empty);
         tvResultCount = findViewById(R.id.tv_result_count);
@@ -202,7 +200,8 @@ public class MultiLegActivity extends Activity {
             if (planner != null) planner.cancel();
             setStatus("已取消");
             btnCancel.setVisibility(View.GONE);
-            progressBar.setVisibility(View.GONE);
+            if (linearProgress != null) linearProgress.setVisibility(View.GONE);
+            if (tvProgressPercent != null) tvProgressPercent.setVisibility(View.GONE);
             btnQuery.setEnabled(true);
         });
 
@@ -361,7 +360,6 @@ public class MultiLegActivity extends Activity {
             linearProgress.setVisibility(querying ? View.VISIBLE : View.GONE);
             if (querying) linearProgress.setProgress(0);
         }
-        if (progressBar != null) progressBar.setVisibility(querying ? View.VISIBLE : View.GONE);
         btnQuery.setEnabled(!querying);
         btnCancel.setVisibility(querying ? View.VISIBLE : View.GONE);
         if (tvProgressPercent != null) {
@@ -435,12 +433,22 @@ public class MultiLegActivity extends Activity {
             tvEmpty.setText("未找到符合条件的路线\n请尝试增加最大换乘次数或扩大间隔时间");
             listPaths.setVisibility(View.GONE);
             findViewById(R.id.layout_results_controls).setVisibility(View.GONE);
+            appendLog("❌ 未找到符合条件的路线\n");
         } else {
             tvEmpty.setVisibility(View.GONE);
             listPaths.setVisibility(View.VISIBLE);
             findViewById(R.id.layout_results_controls).setVisibility(View.VISIBLE);
             tvResultCount.setText(String.format("共 %d 条路线", allPaths.size()));
-            setStatus(String.format("✅ 找到 %d 条路线", allPaths.size()));
+            String msg = String.format("✅ 找到 %d 条路线", allPaths.size());
+            setStatus(msg);
+            appendLog(msg + "\n");
+        }
+        // 完成查询，进度条填满
+        if (linearProgress != null) {
+            linearProgress.setProgress(100);
+        }
+        if (tvProgressPercent != null) {
+            tvProgressPercent.setText("100%");
         }
     }
 

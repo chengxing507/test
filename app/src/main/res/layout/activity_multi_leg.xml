@@ -39,8 +39,7 @@
                 android:layout_weight="1"
                 android:visibility="gone"
                 app:indicatorColor="@color/md3_primary"
-                app:trackColor="@color/md3_primary_container"
-                app:indeterminateAnimationType="linear" />
+                app:trackColor="@color/md3_primary_container" />
 
             <TextView
                 android:id="@+id/tv_progress_percent"
