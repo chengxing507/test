@@ -5,6 +5,7 @@ import android.app.DatePickerDialog;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Process;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -41,20 +42,37 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        // 全局异常捕获 - 显示错误信息而不是闪退
+        setContentView(R.layout.activity_main);
+
+        // 初始化日志系统（写入内部存储 logs/，闪退后日志不丢失）
+        AppLogger.init(this);
+
+        // 全局未捕获异常处理器（将崩溃写入日志文件）
         final Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-            String errorMsg = "崩溃: " + throwable.getMessage() + "\n" + 
-                android.util.Log.getStackTraceString(throwable);
-            AppLogger.error("CRASH", errorMsg);
-            // 如果默认处理器存在，交给它处理（会显示系统崩溃对话框）
+            AppLogger.error("CRASH", "==================== 应用崩溃 ====================");
+            AppLogger.error("CRASH", "线程: " + thread.getName());
+            AppLogger.error("CRASH", "异常: " + throwable.toString());
+            for (StackTraceElement ste : throwable.getStackTrace()) {
+                AppLogger.error("CRASH", "  at " + ste.toString());
+            }
+            if (throwable.getCause() != null) {
+                AppLogger.error("CRASH", "Caused by: " + throwable.getCause().toString());
+                for (StackTraceElement ste : throwable.getCause().getStackTrace()) {
+                    AppLogger.error("CRASH", "  at " + ste.toString());
+                }
+            }
+            AppLogger.error("CRASH", "================================================");
+            // 关闭日志文件确保写入
+            AppLogger.close();
+
+            // 调用默认的崩溃处理（系统弹窗提示用户并退出）
             if (defaultHandler != null) {
                 defaultHandler.uncaughtException(thread, throwable);
+            } else {
+                android.os.Process.killProcess(android.os.Process.myPid());
             }
         });
-        
-        setContentView(R.layout.activity_main);
 
         initViews();
         initListeners();
@@ -70,12 +88,12 @@ public class MainActivity extends Activity {
         progressBar = findViewById(R.id.progress_bar);
         tvStatus = findViewById(R.id.tv_status);
 
-        View vSwap = findViewById(R.id.btn_swap);
-        View vQuery = findViewById(R.id.btn_query);
-        View vMultiLeg = findViewById(R.id.btn_multi_leg);
-        View vSettings = findViewById(R.id.btn_settings);
-        View vFilter = findViewById(R.id.btn_filter);
-        View vLog = findViewById(R.id.btn_log);
+        Button btnSwap = findViewById(R.id.btn_swap);
+        Button btnQuery = findViewById(R.id.btn_query);
+        Button btnMultiLeg = findViewById(R.id.btn_multi_leg);
+        Button btnSettings = findViewById(R.id.btn_settings);
+        Button btnFilter = findViewById(R.id.btn_filter);
+        Button btnLog = findViewById(R.id.btn_log);
 
         // 设置默认日期为今天
         Calendar cal = Calendar.getInstance();
@@ -86,20 +104,20 @@ public class MainActivity extends Activity {
         btnDate.setText(selectedDate);
 
         btnDate.setOnClickListener(v -> showDatePicker());
-        vSwap.setOnClickListener(v -> swapStations());
+        btnSwap.setOnClickListener(v -> swapStations());
 
-        ButtonGuard.guard(vSettings, () ->
+        ButtonGuard.guard(btnSettings, () ->
                 startActivity(new Intent(MainActivity.this, SettingsActivity.class)));
 
-        ButtonGuard.guard(vMultiLeg, () ->
+        ButtonGuard.guard(btnMultiLeg, () ->
                 startActivity(new Intent(MainActivity.this, MultiLegActivity.class)));
 
-        ButtonGuard.guard(vLog, () ->
+        ButtonGuard.guard(btnLog, () ->
                 startActivity(new Intent(MainActivity.this, LogActivity.class)));
 
-        vFilter.setOnClickListener(v -> showFilterDialog());
+        btnFilter.setOnClickListener(v -> showFilterDialog());
 
-        ButtonGuard.guard(vQuery, () -> {
+        ButtonGuard.guard(btnQuery, () -> {
             stationFromName = etFrom.getText().toString().trim();
             stationToName = etTo.getText().toString().trim();
             if (stationFromName.isEmpty() || stationToName.isEmpty()) {
@@ -120,34 +138,31 @@ public class MainActivity extends Activity {
      * 进入页面时异步预加载站点数据，减少查询等待时间
      */
     private void preloadStationData() {
-        try {
-            if (StationDataManager.isLoaded()) {
-                if (tvStatus != null) tvStatus.setText("✅ 站点数据已就绪");
-                return;
-            }
-
-            if (tvStatus != null) tvStatus.setText("⏳ 正在加载站点数据...");
-            if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
-
-            new Thread(() -> {
-                try {
-                    StationDataManager.getStationCode("北京");
-                    runOnUiThread(() -> {
-                        if (tvStatus != null) tvStatus.setText("✅ 站点数据已就绪");
-                        if (progressBar != null) progressBar.setVisibility(View.GONE);
-                        AppLogger.log("MAIN", "站点数据预加载成功");
-                    });
-                } catch (Exception e) {
-                    AppLogger.warn("MAIN", "站点数据预加载失败: " + e.getMessage());
-                    runOnUiThread(() -> {
-                        if (tvStatus != null) tvStatus.setText("⚠️ 站点数据加载失败，查询时自动重试");
-                        if (progressBar != null) progressBar.setVisibility(View.GONE);
-                    });
-                }
-            }).start();
-        } catch (Exception e) {
-            AppLogger.error("MAIN", "preloadStationData 异常: " + e.getMessage());
+        if (StationDataManager.isLoaded()) {
+            tvStatus.setText("✅ 站点数据已就绪");
+            return;
         }
+
+        tvStatus.setText("⏳ 正在加载站点数据...");
+        progressBar.setVisibility(View.VISIBLE);
+
+        new Thread(() -> {
+            try {
+                // 触发一次查询，会下载并缓存 station_name.js
+                StationDataManager.getStationCode("北京");
+                runOnUiThread(() -> {
+                    tvStatus.setText("✅ 站点数据已就绪");
+                    progressBar.setVisibility(View.GONE);
+                    AppLogger.log("MAIN", "站点数据预加载成功");
+                });
+            } catch (Exception e) {
+                AppLogger.warn("MAIN", "站点数据预加载失败: " + e.getMessage());
+                runOnUiThread(() -> {
+                    tvStatus.setText("⚠️ 站点数据加载失败，查询时自动重试");
+                    progressBar.setVisibility(View.GONE);
+                });
+            }
+        }).start();
     }
 
     // ======================== 日期选择 ========================
@@ -328,8 +343,8 @@ public class MainActivity extends Activity {
      */
     private void showError(final String msg) {
         runOnUiThread(() -> {
-            if (tvStatus != null) tvStatus.setText("❌ " + msg);
-            if (progressBar != null) progressBar.setVisibility(View.GONE);
+            tvStatus.setText("❌ " + msg);
+            progressBar.setVisibility(View.GONE);
             Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
         });
     }
@@ -338,8 +353,6 @@ public class MainActivity extends Activity {
      * 在 UI 线程更新状态文字
      */
     private void updateStatus(final String msg) {
-        runOnUiThread(() -> {
-            if (tvStatus != null) tvStatus.setText(msg);
-        });
+        runOnUiThread(() -> tvStatus.setText(msg));
     }
 }
