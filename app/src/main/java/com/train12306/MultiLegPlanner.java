@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -92,8 +93,8 @@ public class MultiLegPlanner {
 
     // ======================== 枢纽站列表 ========================
 
-    /** 全国主要铁路枢纽站（代码 → 中文名） */
-    private static final Map<String, String> HUBS = new HashMap<>();
+    /** 全国主要铁路枢纽站（代码 → 中文名），使用 LinkedHashMap 保证插入顺序 */
+    private static final Map<String, String> HUBS = new LinkedHashMap<>();
     static {
         HUBS.put("BJP", "北京"); HUBS.put("VNP", "北京南"); HUBS.put("BJA", "北京西");
         HUBS.put("VOH", "上海虹桥"); HUBS.put("SHH", "上海"); HUBS.put("SNH", "上海南");
@@ -396,6 +397,8 @@ public class MultiLegPlanner {
         } else {
             hubList = new ArrayList<>(HUBS.entrySet());
         }
+        // 按站名排序，保证每次迭代顺序完全一致
+        Collections.sort(hubList, (a, b) -> a.getValue().compareTo(b.getValue()));
 
         // 首次进入时初始化计数器（只在顶层计数）
         if (countProgress && progressTotal == 0) {
@@ -666,6 +669,8 @@ public class MultiLegPlanner {
             }
 
             activeHubs = new ArrayList<>(selected);
+            // 按站名排序保证每次迭代顺序一致
+            Collections.sort(activeHubs);
             AppLogger.log("PLANNER", "AI 筛选后保留 " + activeHubs.size()
                     + " 个枢纽站: " + String.join(", ", activeHubs));
             return true;
@@ -678,7 +683,11 @@ public class MultiLegPlanner {
 
     /** 获取当前活跃的枢纽站列表副本 */
     public List<String> getActiveHubs() {
-        if (activeHubs == null) return new ArrayList<>(HUBS.values());
+        if (activeHubs == null) {
+            List<String> all = new ArrayList<>(HUBS.values());
+            Collections.sort(all);
+            return all;
+        }
         return new ArrayList<>(activeHubs);
     }
 
