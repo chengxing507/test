@@ -23,7 +23,7 @@ public class AIAnalysisActivity extends Activity {
 
     private EditText etPrompt;
     private TextView tvResult, tvHint;
-    private ProgressBar progressBar;
+    private View progressBar;
     private Button btnAnalyze;
 
     private String ticketSummary = "";

@@ -32,7 +32,7 @@ public class RouteDetailActivity extends Activity {
     private TextView tvHeader;
     private TextView tvEmpty;
     private View tvLoading;  // 布局中是一个 LinearLayout
-    private ProgressBar progressBar;
+    private View progressBar;
 
     private final List<String> routeStations = new ArrayList<>();
     private String trainCode, queryDate;
