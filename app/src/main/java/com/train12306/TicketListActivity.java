@@ -110,7 +110,7 @@ public class TicketListActivity extends Activity {
                 return;
             }
 
-            String[] lines = data.split("\\\\n");
+            String[] lines = data.split("\\n");
             for (String line : lines) {
                 line = line.trim();
                 if (line.isEmpty() || line.startsWith("查询失败") || line.startsWith("解析失败")) {
