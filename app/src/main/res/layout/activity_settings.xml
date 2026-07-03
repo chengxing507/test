@@ -1,144 +1,207 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/md3_background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
+        <!-- 标题 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="AI API 配置"
-            android:textSize="22sp"
+            android:text="⚙️ AI API 配置"
+            android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="#1976D2"
-            android:layout_marginBottom="8dp" />
+            android:textColor="@color/md3_primary"
+            android:layout_marginBottom="4dp" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="支持 OpenAI / DeepSeek / 通义千问等兼容接口"
             android:textSize="13sp"
-            android:textColor="#666666"
-            android:layout_marginBottom="24dp" />
+            android:textColor="@color/md3_outline"
+            android:layout_marginBottom="20dp" />
 
+        <!-- API 地址 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="API 地址"
             android:textStyle="bold"
-            android:textSize="15sp" />
-        <EditText
-            android:id="@+id/et_base_url"
+            android:textSize="15sp"
+            android:textColor="@color/md3_on_surface" />
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="https://api.openai.com/v1/chat/completions"
-            android:inputType="textUri"
-            android:padding="8dp"
-            android:background="@android:drawable/editbox_background"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="12dp"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:hint="https://api.openai.com/v1/chat/completions">
 
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_base_url"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textUri" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- API 密钥 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="API 密钥"
             android:textStyle="bold"
-            android:textSize="15sp" />
-        <EditText
-            android:id="@+id/et_api_key"
+            android:textSize="15sp"
+            android:textColor="@color/md3_on_surface" />
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:hint="sk-..."
-            android:inputType="textPassword"
-            android:padding="8dp"
-            android:background="@android:drawable/editbox_background"
-            android:layout_marginBottom="16dp" />
+            app:passwordToggleEnabled="true">
 
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_api_key"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- 模型名称 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="模型名称"
             android:textStyle="bold"
-            android:textSize="15sp" />
-        <EditText
-            android:id="@+id/et_model_name"
+            android:textSize="15sp"
+            android:textColor="@color/md3_on_surface" />
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="deepseek-v4-flash"
-            android:padding="8dp"
-            android:background="@android:drawable/editbox_background"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="20dp"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:hint="deepseek-v4-flash">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_model_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <!-- AI 连接状态 -->
-        <TextView
-            android:id="@+id/tv_ai_status"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="13sp"
-            android:padding="4dp"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="12dp"
+            app:cardElevation="1dp"
+            app:cardCornerRadius="8dp"
+            app:strokeColor="@color/md3_outline_variant"
+            app:strokeWidth="1dp"
+            android:visibility="visible">
 
-        <!-- 加载指示器 -->
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:layout_marginBottom="8dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="12dp">
 
-        <Button
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/progress_bar"
+                    android:layout_width="0dp"
+                    android:layout_height="4dp"
+                    android:layout_weight="1"
+                    android:visibility="gone"
+                    app:indicatorColor="@color/md3_primary" />
+
+                <TextView
+                    android:id="@+id/tv_ai_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="13sp"
+                    android:textColor="@color/md3_on_surface_variant" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 按钮组 -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_save"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:text="保存配置"
-            android:layout_marginBottom="12dp" />
+            android:text="💾 保存配置"
+            style="@style/Widget.Material3.Button"
+            android:layout_marginBottom="8dp" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_test"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:text="测试 AI 连接"
-            android:layout_marginBottom="12dp" />
+            android:text="🔗 测试 AI 连接"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_marginBottom="8dp" />
 
-        <Button
-            android:id="@+id/btn_back"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="返回" />
-
-        <Button
-            android:id="@+id/btn_log"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="查看运行日志"
-            android:layout_marginTop="8dp" />
-
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_export_config"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="44dp"
             android:text="📤 导出配置"
-            android:layout_marginTop="8dp" />
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_marginBottom="8dp" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_import_config"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="44dp"
             android:text="📥 导入配置"
-            android:layout_marginTop="8dp" />
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_marginBottom="8dp" />
 
-        <TextView
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_log"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="📋 查看运行日志"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_marginTop="4dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_back"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="← 返回"
+            style="@style/Widget.Material3.Button.TextButton" />
+
+        <!-- 安全提示 -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:textColor="#999999"
-            android:padding="16dp"
-            android:text="提示：API密钥仅保存在手机本地。\nAI分析时会将车次信息发到您配置的API地址。\n推荐使用国产大模型（DeepSeek、通义千问等）。" />
+            android:layout_marginTop="16dp"
+            app:cardElevation="0dp"
+            app:cardCornerRadius="8dp"
+            app:strokeColor="@color/md3_outline_variant"
+            app:strokeWidth="1dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@color/md3_outline"
+                android:padding="12dp"
+                android:lineSpacingExtra="4dp"
+                android:text="🔒 API密钥仅保存在手机本地。\n📤 AI分析时会将车次信息发到您配置的API地址。\n🇨🇳 推荐使用国产大模型（DeepSeek、通义千问等）。" />
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 </ScrollView>

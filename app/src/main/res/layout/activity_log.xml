@@ -1,55 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/md3_background">
 
-    <RelativeLayout
+    <com.google.android.material.appbar.MaterialToolbar
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:background="#1976D2"
-        android:gravity="center_vertical">
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/md3_primary"
+        android:elevation="4dp"
+        app:title="📋 运行日志"
+        app:titleTextColor="@color/md3_on_primary" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="运行日志"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:layout_centerInParent="true" />
-
-        <TextView
-            android:id="@+id/btn_copy_log"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="复制"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:gravity="center"
-            android:paddingLeft="16dp" android:paddingRight="16dp"
-            android:layout_alignParentEnd="true" />
-    </RelativeLayout>
-
-    <ScrollView
-        android:id="@+id/scroll_log"
+    <TextView
+        android:id="@+id/tv_log_content"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="#1A1A1A"
-        android:padding="8dp">
-
-        <TextView
-            android:id="@+id/tv_log"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="暂无日志"
-            android:textSize="11sp"
-            android:fontFamily="monospace"
-            android:textColor="#00FF00"
-            android:textIsSelectable="true"
-            android:lineSpacingExtra="2dp" />
-    </ScrollView>
+        android:padding="8dp"
+        android:textSize="11sp"
+        android:textColor="@color/md3_on_surface_variant"
+        android:fontFamily="monospace"
+        android:lineSpacingExtra="2dp"
+        android:scrollbars="vertical"
+        android:background="@color/md3_surface_variant" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -57,25 +33,22 @@
         android:orientation="horizontal"
         android:padding="8dp">
 
-        <Button
-            android:id="@+id/btn_refresh"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="刷新" />
-
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_clear"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="44dp"
             android:layout_weight="1"
-            android:text="清空" />
+            android:text="清空日志"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_marginEnd="4dp" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_back"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="44dp"
             android:layout_weight="1"
-            android:text="返回" />
+            android:text="← 返回"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_marginStart="4dp" />
     </LinearLayout>
 </LinearLayout>

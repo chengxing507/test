@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/md3_background">
 
-    <TextView
+    <!-- 标题栏 -->
+    <com.google.android.material.appbar.MaterialToolbar
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="查询结果"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:padding="16dp"
-        android:background="#1976D2"
-        android:textColor="#FFFFFF" />
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/md3_primary"
+        android:elevation="4dp"
+        app:title="🚄 查询结果"
+        app:titleTextColor="@color/md3_on_primary" />
 
     <!-- 加载状态 -->
     <LinearLayout
@@ -24,30 +25,52 @@
         android:orientation="vertical"
         android:visibility="gone">
 
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginBottom="12dp" />
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginBottom="16dp"
+            app:indicatorColor="@color/md3_primary"
+            app:indicatorSize="48dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="正在解析车次数据..."
             android:textSize="16sp"
-            android:textColor="#666666" />
+            android:textColor="@color/md3_outline" />
     </LinearLayout>
 
     <!-- 空状态 -->
-    <TextView
+    <LinearLayout
         android:id="@+id/tv_empty"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:gravity="center"
-        android:text="暂无车次信息"
-        android:textSize="18sp"
-        android:visibility="gone" />
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🚫"
+            android:textSize="48sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="暂无车次信息"
+            android:textSize="18sp"
+            android:textColor="@color/md3_outline"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="请尝试更改日期或筛选条件"
+            android:textSize="14sp"
+            android:textColor="@color/md3_outline_variant" />
+    </LinearLayout>
 
     <!-- 车次列表 -->
     <ListView
@@ -57,30 +80,35 @@
         android:layout_weight="1"
         android:divider="@null"
         android:dividerHeight="0dp"
-        android:visibility="gone" />
+        android:visibility="gone"
+        android:clipToPadding="false"
+        android:padding="8dp" />
 
     <!-- 底部按钮 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:background="@color/md3_surface"
+        android:elevation="4dp">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_back"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="返回" />
+            android:text="← 返回"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_marginEnd="4dp" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_compare"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="AI对比分析"
-            android:background="#1976D2"
-            android:textColor="#FFFFFF" />
-
+            android:text="🤖 AI 对比分析"
+            style="@style/Widget.Material3.Button"
+            android:layout_marginStart="4dp" />
     </LinearLayout>
 </LinearLayout>
