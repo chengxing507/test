@@ -20,8 +20,8 @@ import java.util.List;
 public class TicketListActivity extends Activity {
 
     private ListView listView;
-    private TextView tvEmpty;
-    private View tvLoading;  // 布局中是一个 LinearLayout
+    private View tvEmpty;   // 布局中是 LinearLayout (含 🚫 + TextView)
+    private View tvLoading; // 布局中是一个 LinearLayout
     private ProgressBar progressBar;
 
     private final List<TicketItem> ticketList = new ArrayList<>();
@@ -86,7 +86,6 @@ public class TicketListActivity extends Activity {
             progressBar.setVisibility(View.GONE);
             tvLoading.setVisibility(View.GONE);
             listView.setVisibility(View.GONE);
-            tvEmpty.setText("暂无车次信息\n请尝试更改日期或筛选条件");
         } else {
             tvEmpty.setVisibility(View.GONE);
             progressBar.setVisibility(View.GONE);
