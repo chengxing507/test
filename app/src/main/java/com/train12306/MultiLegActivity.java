@@ -6,10 +6,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.InputType;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.checkbox.MaterialCheckBox;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +48,13 @@ public class MultiLegActivity extends Activity {
 
     private boolean sortTimeAsc = true;
     private boolean sortPriceAsc = true;
+
+    // 实时日志
+    private TextView tvLiveLog;
+    private LinearProgressIndicator linearProgress;
+    private TextView tvProgressPercent;
+    private StringBuilder liveLogBuilder = new StringBuilder();
+    private Handler logHandler = new Handler();
 
     private static final String[] MODE_NAMES = {"自动换乘", "途经站序列", "弹性途经站"};
 
@@ -77,6 +93,14 @@ public class MultiLegActivity extends Activity {
         tvEmpty = findViewById(R.id.tv_empty);
         tvResultCount = findViewById(R.id.tv_result_count);
         listPaths = findViewById(R.id.list_paths);
+
+        // 实时日志与进度
+        tvLiveLog = findViewById(R.id.tv_live_log);
+        linearProgress = findViewById(R.id.linear_progress);
+        tvProgressPercent = findViewById(R.id.tv_progress_percent);
+        if (tvLiveLog != null) {
+            tvLiveLog.setMovementMethod(new ScrollingMovementMethod());
+        }
 
         pathAdapter = new PathAdapter();
         listPaths.setAdapter(pathAdapter);
@@ -231,11 +255,27 @@ public class MultiLegActivity extends Activity {
         planner.setCallback(new MultiLegPlanner.ProgressCallback() {
             @Override
             public void onProgress(String msg) {
-                runOnUiThread(() -> setStatus(msg));
+                runOnUiThread(() -> {
+                    setStatus(msg);
+                    appendLog(msg + "
+");
+                });
+            }
+            @Override
+            public void onProgressPercent(int current, int total, String message) {
+                runOnUiThread(() -> {
+                    updateProgress(current, total);
+                    appendLog(String.format("[%d/%d] %s
+", current, total, message));
+                });
             }
             @Override
             public void onError(String msg) {
-                runOnUiThread(() -> setStatus("❌ " + msg));
+                runOnUiThread(() -> {
+                    setStatus("❌ " + msg);
+                    appendLog("❌ " + msg + "
+");
+                });
             }
             @Override
             public boolean isCancelled() { return false; }
@@ -249,13 +289,21 @@ public class MultiLegActivity extends Activity {
                 String apiKey = prefs.getString("api_key", "");
                 String modelName = prefs.getString("model_name", "");
                 if (!baseUrl.isEmpty() && !apiKey.isEmpty()) {
+                    appendLog("🤖 AI 正在预筛选枢纽站，请稍候...
+");
                     updateStatus("🤖 AI 正在预筛选枢纽站...");
                     final boolean filtered = planner.filterHubsByAI(from, to, baseUrl, apiKey, modelName);
                     if (filtered) {
                         int count = planner.getActiveHubs().size();
-                        updateStatus(String.format("🤖 AI 筛选后保留 %d 个枢纽站", count));
+                        String msg = String.format("🤖 AI 筛选后保留 %d 个枢纽站", count);
+                        appendLog(msg + "
+");
+                        updateStatus(msg);
                     } else {
-                        updateStatus("⚠️ AI 筛选失败，使用全部枢纽站");
+                        String msg = "⚠️ AI 筛选失败，使用全部枢纽站";
+                        appendLog(msg + "
+");
+                        updateStatus(msg);
                     }
                 }
             }
@@ -309,20 +357,76 @@ public class MultiLegActivity extends Activity {
     }
 
     private void setQuerying(boolean querying) {
-        progressBar.setVisibility(querying ? View.VISIBLE : View.GONE);
+        if (linearProgress != null) {
+            linearProgress.setVisibility(querying ? View.VISIBLE : View.GONE);
+            if (querying) linearProgress.setProgress(0);
+        }
+        if (progressBar != null) progressBar.setVisibility(querying ? View.VISIBLE : View.GONE);
         btnQuery.setEnabled(!querying);
         btnCancel.setVisibility(querying ? View.VISIBLE : View.GONE);
-        if (querying) setStatus("正在查询...");
+        if (tvProgressPercent != null) {
+            tvProgressPercent.setVisibility(querying ? View.VISIBLE : View.GONE);
+        }
+        if (querying) {
+            setStatus("正在查询...");
+            clearLiveLog();
+            appendLog("▶ 开始查询
+");
+        }
     }
 
     private void setStatus(String msg) {
-        tvStatus.setText(msg);
+        if (tvStatus != null) {
+            tvStatus.setText(msg);
+        }
         AppLogger.log("MULTI", msg);
     }
 
     /** 在后台线程中更新状态（自动 post 到 UI 线程） */
     private void updateStatus(final String msg) {
-        runOnUiThread(() -> tvStatus.setText(msg));
+        runOnUiThread(() -> {
+            if (tvStatus != null) tvStatus.setText(msg);
+        });
+    }
+
+    /** 添加实时日志 */
+    private void appendLog(final String logLine) {
+        runOnUiThread(() -> {
+            if (tvLiveLog != null) {
+                liveLogBuilder.append(logLine);
+                if (liveLogBuilder.length() > 5000) {
+                    liveLogBuilder.delete(0, liveLogBuilder.length() - 4000);
+                }
+                tvLiveLog.setText(liveLogBuilder.toString());
+                // 自动滚动到底部
+                final int scrollAmount = tvLiveLog.getLayout() != null ?
+                        tvLiveLog.getLayout().getLineCount() * tvLiveLog.getLineHeight() : 0;
+                if (scrollAmount > tvLiveLog.getHeight()) {
+                    tvLiveLog.scrollTo(0, scrollAmount - tvLiveLog.getHeight());
+                }
+            }
+        });
+    }
+
+    /** 清空实时日志 */
+    private void clearLiveLog() {
+        liveLogBuilder = new StringBuilder();
+        if (tvLiveLog != null) tvLiveLog.setText("");
+    }
+
+    /** 更新水平进度条 */
+    private void updateProgress(final int current, final int total) {
+        runOnUiThread(() -> {
+            if (linearProgress != null) {
+                int pct = total > 0 ? (int)((float)current / total * 100) : 0;
+                linearProgress.setProgress(pct);
+                linearProgress.setMax(100);
+            }
+            if (tvProgressPercent != null) {
+                int pct = total > 0 ? (int)((float)current / total * 100) : 0;
+                tvProgressPercent.setText(String.format("%d%%", pct));
+            }
+        });
     }
 
     private void showResults() {

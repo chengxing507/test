@@ -1,13 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="AppTheme" parent="android:Theme.Material.Light.DarkActionBar">
-        <item name="android:colorPrimary">#1976D2</item>
-        <item name="android:colorPrimaryDark">#1565C0</item>
-        <item name="android:colorAccent">#FF9800</item>
+    <style name="AppTheme" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/md3_primary</item>
+        <item name="colorOnPrimary">@color/md3_on_primary</item>
+        <item name="colorPrimaryContainer">@color/md3_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/md3_on_primary_container</item>
+        <item name="colorSecondary">@color/md3_secondary</item>
+        <item name="colorOnSecondary">@color/md3_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/md3_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/md3_on_secondary_container</item>
+        <item name="colorTertiary">@color/md3_tertiary</item>
+        <item name="colorOnTertiary">@color/md3_on_tertiary</item>
+        <item name="colorError">@color/md3_error</item>
+        <item name="colorOnError">@color/md3_on_error</item>
+        <item name="android:colorBackground">@color/md3_background</item>
+        <item name="colorOnBackground">@color/md3_on_background</item>
+        <item name="colorSurface">@color/md3_surface</item>
+        <item name="colorOnSurface">@color/md3_on_surface</item>
     </style>
-    <style name="AppTheme.NoBar" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:colorPrimary">#1976D2</item>
-        <item name="android:colorPrimaryDark">#1565C0</item>
-        <item name="android:colorAccent">#FF9800</item>
-    </style>
+
+    <!-- 兼容旧的 NoBar 引用 -->
+    <style name="AppTheme.NoBar" parent="AppTheme" />
 </resources>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 主题配色 -->
+    <color name="md3_primary">#1976D2</color>
+    <color name="md3_on_primary">#FFFFFF</color>
+    <color name="md3_primary_container">#D1E4FF</color>
+    <color name="md3_on_primary_container">#001D36</color>
+    <color name="md3_secondary">#565F71</color>
+    <color name="md3_on_secondary">#FFFFFF</color>
+    <color name="md3_secondary_container">#DAE2F9</color>
+    <color name="md3_on_secondary_container">#131C2B</color>
+    <color name="md3_tertiary">#705575</color>
+    <color name="md3_on_tertiary">#FFFFFF</color>
+    <color name="md3_tertiary_container">#FAD8FD</color>
+    <color name="md3_on_tertiary_container">#28132E</color>
+    <color name="md3_error">#BA1A1A</color>
+    <color name="md3_on_error">#FFFFFF</color>
+    <color name="md3_error_container">#FFDAD6</color>
+    <color name="md3_on_error_container">#410002</color>
+    <color name="md3_background">#FDFCFF</color>
+    <color name="md3_on_background">#1A1C1E</color>
+    <color name="md3_surface">#FDFCFF</color>
+    <color name="md3_on_surface">#1A1C1E</color>
+    <color name="md3_surface_variant">#E0E2EC</color>
+    <color name="md3_on_surface_variant">#44474E</color>
+    <color name="md3_outline">#74777F</color>
+    <color name="md3_outline_variant">#C4C6D0</color>
+
+    <!-- 状态颜色 -->
+    <color name="status_success">#2E7D32</color>
+    <color name="status_warning">#F57F17</color>
+    <color name="status_error">#C62828</color>
+    <color name="status_info">#1565C0</color>
+
+    <!-- 换乘卡片颜色 -->
+    <color name="card_best">#E3F2FD</color>
+    <color name="card_normal">#F5F5F5</color>
+</resources>

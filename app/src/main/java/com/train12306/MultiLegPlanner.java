@@ -154,6 +154,11 @@ public class MultiLegPlanner {
         void onProgress(String msg);
         void onError(String msg);
         boolean isCancelled();
+
+        /** 带百分比的进度报告 */
+        default void onProgressPercent(int current, int total, String message) {
+            onProgress(String.format("[%d/%d] %s", current, total, message));
+        }
     }
 
     public MultiLegPlanner(String date, int maxTrans, int maxIntervalHours) {
@@ -399,8 +404,13 @@ public class MultiLegPlanner {
             String hubName = hub.getValue();
 
             progressCurrent++;
-            log(String.format("🔍 枢纽站 %s ( %d / %d ) : %s → %s → %s",
-                    hubName, progressCurrent, progressTotal, from, hubName, to));
+            int pct = (int)((float)progressCurrent / progressTotal * 100);
+            String progMsg = String.format("🔍 枢纽站 %s (%d/%d) %d%% | %s → %s → %s",
+                    hubName, progressCurrent, progressTotal, pct, from, hubName, to);
+            log(progMsg);
+            // 通知带百分比的进度
+            if (callback != null) callback.onProgressPercent(progressCurrent, progressTotal,
+                    String.format("正在查询 %s → %s 的列车...", from, hubName));
 
             // 跳过已经过站
             if (visited.contains(hubName) || visited.contains(hubCode)) continue;
