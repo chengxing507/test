@@ -306,6 +306,21 @@ public class MultiLegActivity extends Activity {
                 });
             }
             @Override
+            public void onIndeterminateProgress(String message) {
+                runOnUiThread(() -> {
+                    // 切换到不确定进度模式
+                    if (linearProgress != null) {
+                        linearProgress.setIndeterminate(true);
+                        linearProgress.setVisibility(View.VISIBLE);
+                    }
+                    if (tvProgressPercent != null) {
+                        tvProgressPercent.setText("...");
+                    }
+                    setStatus(message);
+                    appendLog(message + "\n");
+                });
+            }
+            @Override
             public void onError(String msg) {
                 runOnUiThread(() -> {
                     setStatus("❌ " + msg);
@@ -391,6 +406,7 @@ public class MultiLegActivity extends Activity {
     private void setQuerying(boolean querying) {
         if (linearProgress != null) {
             linearProgress.setVisibility(querying ? View.VISIBLE : View.GONE);
+            linearProgress.setIndeterminate(false);
             if (querying) linearProgress.setProgress(0);
         }
         btnQuery.setEnabled(!querying);
@@ -475,8 +491,9 @@ public class MultiLegActivity extends Activity {
             setStatus(msg);
             appendLog(msg + "\n");
         }
-        // 完成查询，进度条填满
+        // 完成查询，恢复确定进度模式并填满
         if (linearProgress != null) {
+            linearProgress.setIndeterminate(false);
             linearProgress.setProgress(100);
         }
         if (tvProgressPercent != null) {

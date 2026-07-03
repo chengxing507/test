@@ -160,6 +160,11 @@ public class MultiLegPlanner {
         default void onProgressPercent(int current, int total, String message) {
             onProgress(String.format("[%d/%d] %s", current, total, message));
         }
+
+        /** 进入不确定进度模式（无法预估总量的工作，如多级递归） */
+        default void onIndeterminateProgress(String message) {
+            onProgress(message);
+        }
     }
 
     public MultiLegPlanner(String date, int maxTrans, int maxIntervalHours) {
@@ -249,11 +254,18 @@ public class MultiLegPlanner {
         // Level 1+: 通过枢纽站中转
         for (int level = 1; level <= maxTransfers; level++) {
             if (isCancelled()) break;
-            progressTotal = 0; // 重置计数器，让 findHubTransferPaths 重新初始化
+            progressTotal = 0;
             progressCurrent = 0;
+            if (level > 1 && callback != null) {
+                // 多级换乘无法预估总量，通知 UI 进入不确定进度模式
+                callback.onIndeterminateProgress(String.format("🔄 正在查找 %d 次换乘方案...", level));
+            }
             log(String.format("查找 %d 次换乘...", level));
             List<Path> levelPaths = findHubTransferPaths(from, to, level, new HashSet<>());
             allPaths.addAll(levelPaths);
+            if (level > 1 && callback != null) {
+                callback.onProgressPercent(100, 100, String.format("%d 次换乘完成: %d 条", level, levelPaths.size()));
+            }
             log(String.format("  %d 次换乘: %d 条", level, levelPaths.size()));
         }
 
@@ -397,8 +409,7 @@ public class MultiLegPlanner {
         } else {
             hubList = new ArrayList<>(HUBS.entrySet());
         }
-        // 按站名排序，保证每次迭代顺序完全一致
-        Collections.sort(hubList, (a, b) -> a.getValue().compareTo(b.getValue()));
+
 
         // 首次进入时初始化计数器（只在顶层计数）
         if (countProgress && progressTotal == 0) {
@@ -419,9 +430,6 @@ public class MultiLegPlanner {
                 log(progMsg);
                 if (callback != null) callback.onProgressPercent(progressCurrent, progressTotal,
                         String.format("正在查询 %s → %s 的列车...", from, hubName));
-            } else {
-                // 递归调用只显示文本，不计数
-                log(String.format("  ↪ 递归查询: %s → %s → %s", from, hubName, to));
             }
 
             // 跳过已经过站
