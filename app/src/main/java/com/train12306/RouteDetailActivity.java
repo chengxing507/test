@@ -241,8 +241,14 @@ public class RouteDetailActivity extends Activity {
                 // 格式3: {"data": {"data": [{"station_name":"...", ...}, ...]}}
                 if (!parsed && json.get("data").isJsonObject()) {
                     JsonObject dataObj = json.getAsJsonObject("data");
+                    AppLogger.log("ROUTE", "DEBUG: dataObj keys=" + dataObj.keySet());
+                    AppLogger.log("ROUTE", "DEBUG: dataObj.has('data')=" + dataObj.has("data"));
+                    if (dataObj.has("data")) {
+                        AppLogger.log("ROUTE", "DEBUG: dataObj.get('data') isArray=" + dataObj.get("data").isJsonArray() + " isObject=" + dataObj.get("data").isJsonObject() + " isPrimitive=" + dataObj.get("data").isJsonPrimitive());
+                    }
                     if (dataObj.has("data") && dataObj.get("data").isJsonArray()) {
                         JsonArray stations = dataObj.getAsJsonArray("data");
+                        AppLogger.log("ROUTE", "DEBUG: stations.size()=" + stations.size());
                         // data.data 直接就是车站数组
                         for (int i = 0; i < stations.size(); i++) {
                             JsonObject station = stations.get(i).getAsJsonObject();
