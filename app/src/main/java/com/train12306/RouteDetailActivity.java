@@ -26,7 +26,7 @@ import java.util.List;
 public class RouteDetailActivity extends Activity {
 
     private static final String QUERY_ROUTE_URL =
-            "https://kyfw.12306.cn/otn/queryTrainInfo/query";
+            "https://kyfw.12306.cn/otn/czxx/queryByTrainNo";
 
     private ListView listView;
     private TextView tvHeader;
@@ -144,15 +144,17 @@ public class RouteDetailActivity extends Activity {
 
     /**
      * 直接调 12306 API 查询经停站
-     * 参数：trainNo（内部编号），date（日期）
-     * 需要携带 12306 Cookie（从 TicketQueryManager 获取）
+     * 使用正确的接口 /otn/czxx/queryByTrainNo
+     * 参数：train_no（内部编号），date（日期），station codes
      */
     private String queryTrainRoute(String trainNo, String date, String fromCode, String toCode) throws Exception {
         String trainId = (trainNo != null && !trainNo.isEmpty()) ? trainNo : trainCode;
 
-        // 12306 API 参数名是 trainNo（驼峰）和 date
+        // 正确的 12306 接口: /otn/czxx/queryByTrainNo
         String urlStr = QUERY_ROUTE_URL
-                + "?trainNo=" + URLEncoder.encode(trainId, "UTF-8")
+                + "?train_no=" + URLEncoder.encode(trainId, "UTF-8")
+                + "&from_station_telecode=" + (fromCode != null ? fromCode : "")
+                + "&to_station_telecode=" + (toCode != null ? toCode : "")
                 + "&date=" + date;
 
         AppLogger.log("ROUTE", "请求 URL: " + urlStr);
