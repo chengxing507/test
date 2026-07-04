@@ -83,9 +83,21 @@ public class TicketQueryManager {
     }
 
     /**
-     * 确保已获取 12306 Cookie
+     * 确保已获取 12306 Cookie（如有缓存则跳过）
      */
+    private static boolean cookieReady = false;
+    private static long lastCookieTime = 0;
+    private static final long COOKIE_REFRESH_INTERVAL = 300000; // 5分钟刷新一次
+
     private static synchronized void ensureCookie() throws Exception {
+        // 如果已有 cookie 且在有效期内，跳过
+        if (cookieReady && !cookieManager.getCookieStore().getCookies().isEmpty()) {
+            long now = System.currentTimeMillis();
+            if (now - lastCookieTime < COOKIE_REFRESH_INTERVAL) {
+                return; // Cookie 仍有效
+            }
+        }
+
         HttpURLConnection conn = (HttpURLConnection) new URL(INIT_URL).openConnection();
         conn.setConnectTimeout(10000);
         conn.setReadTimeout(10000);
@@ -109,7 +121,9 @@ public class TicketQueryManager {
             }
         }
 
-        AppLogger.log("QUERY", "Cookie 获取完成");
+        cookieReady = true;
+        lastCookieTime = System.currentTimeMillis();
+        AppLogger.log("QUERY", "Cookie 获取/刷新完成");
     }
 
     /**
