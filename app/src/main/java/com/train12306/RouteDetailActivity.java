@@ -145,19 +145,16 @@ public class RouteDetailActivity extends Activity {
 
     /**
      * 直接调 12306 API 查询经停站
-     * 使用 train_no（内部编号）+ 站点代码
+     * 参数：trainNo（内部编号），date（日期）
      */
     private String queryTrainRoute(String trainNo, String date, String fromCode, String toCode) throws Exception {
         // 优先使用 train_no，如果为空则降级用车次代码
         String trainId = (trainNo != null && !trainNo.isEmpty()) ? trainNo : trainCode;
-        String fromTc = (fromCode != null && !fromCode.isEmpty()) ? fromCode : "";
-        String toTc = (toCode != null && !toCode.isEmpty()) ? toCode : "";
 
+        // 12306 API 参数名是 trainNo（驼峰）和 date
         String urlStr = QUERY_ROUTE_URL
-                + "?train_no=" + URLEncoder.encode(trainId, "UTF-8")
-                + "&from_station_telecode=" + URLEncoder.encode(fromTc, "UTF-8")
-                + "&to_station_telecode=" + URLEncoder.encode(toTc, "UTF-8")
-                + "&depart_date=" + date;
+                + "?trainNo=" + URLEncoder.encode(trainId, "UTF-8")
+                + "&date=" + date;
 
         AppLogger.log("ROUTE", "请求 URL: " + urlStr);
 
