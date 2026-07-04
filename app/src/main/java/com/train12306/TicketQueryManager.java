@@ -113,9 +113,9 @@ public class TicketQueryManager {
     }
 
     /**
-     * 获取当前 Cookie 字符串
+     * 获取当前 Cookie 字符串（公开，供其他地方使用）
      */
-    private static String getCookieString() {
+    public static String getCookieString() {
         List<HttpCookie> cookies = cookieManager.getCookieStore().getCookies();
         if (cookies.isEmpty()) return null;
         StringBuilder sb = new StringBuilder();
