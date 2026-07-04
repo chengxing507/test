@@ -155,7 +155,7 @@ public class RouteDetailActivity extends Activity {
                 + "?train_no=" + URLEncoder.encode(trainId, "UTF-8")
                 + "&from_station_telecode=" + (fromCode != null ? fromCode : "")
                 + "&to_station_telecode=" + (toCode != null ? toCode : "")
-                + "&date=" + date;
+                + "&depart_date=" + date;
 
         AppLogger.log("ROUTE", "请求 URL: " + urlStr);
 
