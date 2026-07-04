@@ -9,7 +9,6 @@ import android.widget.*;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -146,9 +145,9 @@ public class RouteDetailActivity extends Activity {
     /**
      * 直接调 12306 API 查询经停站
      * 参数：trainNo（内部编号），date（日期）
+     * 需要携带 12306 Cookie（从 TicketQueryManager 获取）
      */
     private String queryTrainRoute(String trainNo, String date, String fromCode, String toCode) throws Exception {
-        // 优先使用 train_no，如果为空则降级用车次代码
         String trainId = (trainNo != null && !trainNo.isEmpty()) ? trainNo : trainCode;
 
         // 12306 API 参数名是 trainNo（驼峰）和 date
@@ -165,6 +164,16 @@ public class RouteDetailActivity extends Activity {
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
         conn.setRequestProperty("Referer", "https://kyfw.12306.cn/otn/leftTicket/init");
         conn.setRequestProperty("Accept", "application/json, text/plain, */*");
+        conn.setRequestProperty("X-Requested-With", "XMLHttpRequest");
+
+        // 带上 12306 Cookie（必须，否则返回 HTML 错误页）
+        String cookie = TicketQueryManager.getCookieString();
+        if (cookie != null && !cookie.isEmpty()) {
+            conn.setRequestProperty("Cookie", cookie);
+            AppLogger.log("ROUTE", "已携带 Cookie");
+        } else {
+            AppLogger.warn("ROUTE", "Cookie 为空，API 可能返回错误");
+        }
 
         int httpCode = conn.getResponseCode();
         AppLogger.log("ROUTE", "HTTP " + httpCode);
@@ -183,14 +192,16 @@ public class RouteDetailActivity extends Activity {
 
     /**
      * 解析 12306 API 响应中的经停站数据
-     * 12306 返回格式: {"data": [{"station_name":"...", "arrive_time":"...", "start_time":"...", "stopover_time":"..."}, ...]}
+     * 12306 返回格式: {"data": {"train_info": [{"station_name":"...", "arrive_time":"...", ...}, ...]}}
+     * 也可能是: {"data": [{"station_name":"...", ...}, ...]}
+     * 或: {"data": {"data": [{"stations": [...]}, ...]}}
      */
     private void parseRoute(String data) {
         try {
-            // 打印原始响应到日志帮助调试
+            // 打印原始响应前 300 字符帮助调试
             AppLogger.log("ROUTE", "原始响应: " + (data.length() > 300 ? data.substring(0, 300) + "..." : data));
 
-            // 使用 lenient 模式解析，兼容 12306 返回的非标准 JSON
+            // 使用 lenient 模式解析
             JsonObject json = new GsonBuilder().setLenient().create()
                     .fromJson(data, JsonObject.class);
 
@@ -199,23 +210,34 @@ public class RouteDetailActivity extends Activity {
                 return;
             }
 
-            // 尝试从 data 字段获取车站数组
+            boolean parsed = false;
+
             if (json.has("data")) {
-                if (json.get("data").isJsonArray()) {
-                    // 格式: {"data": [{"station_name":"...", ...}, ...]}
+                // 格式1: {"data": {"train_info": [...]}}
+                if (json.get("data").isJsonObject()) {
+                    JsonObject dataObj = json.getAsJsonObject("data");
+                    if (dataObj.has("train_info") && dataObj.get("train_info").isJsonArray()) {
+                        JsonArray stations = dataObj.getAsJsonArray("train_info");
+                        for (int i = 0; i < stations.size(); i++) {
+                            JsonObject station = stations.get(i).getAsJsonObject();
+                            routeStations.add(formatStation(station, i));
+                        }
+                        parsed = true;
+                    }
+                }
+
+                // 格式2: {"data": [...]}（直接数组）
+                if (!parsed && json.get("data").isJsonArray()) {
                     JsonArray stations = json.getAsJsonArray("data");
                     for (int i = 0; i < stations.size(); i++) {
                         JsonObject station = stations.get(i).getAsJsonObject();
-                        String stationName = getJsonStr(station, "station_name");
-                        String arriveTime = getJsonStr(station, "arrive_time");
-                        String departTime = getJsonStr(station, "start_time");
-                        String stopTime = getJsonStr(station, "stopover_time");
-                        routeStations.add((i + 1) + ". " + stationName
-                                + "  " + arriveTime + "/" + departTime
-                                + "  停" + stopTime);
+                        routeStations.add(formatStation(station, i));
                     }
-                } else if (json.get("data").isJsonObject()) {
-                    // 格式: {"data": {"data": [{"stations": [...]}, ...]}}
+                    parsed = true;
+                }
+
+                // 格式3: {"data": {"data": [{"stations": [...]}, ...]}}
+                if (!parsed && json.get("data").isJsonObject()) {
                     JsonObject dataObj = json.getAsJsonObject("data");
                     if (dataObj.has("data") && dataObj.get("data").isJsonArray()) {
                         JsonArray dataArray = dataObj.getAsJsonArray("data");
@@ -225,33 +247,43 @@ public class RouteDetailActivity extends Activity {
                                 JsonArray stations = train.getAsJsonArray("stations");
                                 for (int i = 0; i < stations.size(); i++) {
                                     JsonObject station = stations.get(i).getAsJsonObject();
-                                    String stationName = getJsonStr(station, "station_name");
-                                    String arriveTime = getJsonStr(station, "arrive_time");
-                                    String departTime = getJsonStr(station, "start_time");
-                                    String stopTime = getJsonStr(station, "stopover_time");
-                                    routeStations.add((i + 1) + ". " + stationName
-                                            + "  " + arriveTime + "/" + departTime
-                                            + "  停" + stopTime);
+                                    routeStations.add(formatStation(station, i));
                                 }
+                                parsed = true;
                             }
                         }
                     }
                 }
             }
 
-            if (routeStations.isEmpty()) {
-                routeStations.add("该车次暂无经停站数据");
+            if (!parsed) {
+                String preview = data.length() > 200 ? data.substring(0, 200) + "..." : data;
+                routeStations.add("API 返回格式异常，前200字符: " + preview);
+                AppLogger.warn("ROUTE", "API 响应格式无法解析: " + preview);
             }
+
             AppLogger.log("ROUTE", "解析到 " + routeStations.size() + " 个经停站");
         } catch (Throwable t) {
             AppLogger.error("ROUTE", "路线解析异常: " + t.getMessage());
-            // 显示原始响应前 500 字符帮助调试
             String preview = data != null && data.length() > 500
                     ? data.substring(0, 500) + "..."
                     : (data != null ? data : "null");
             routeStations.add("⚠️ 解析失败: " + t.getMessage());
             routeStations.add("原始响应(前500字符): " + preview);
         }
+    }
+
+    /**
+     * 格式化车站信息为显示文本
+     */
+    private String formatStation(JsonObject station, int index) {
+        String stationName = getJsonStr(station, "station_name");
+        String arriveTime = getJsonStr(station, "arrive_time");
+        String departTime = getJsonStr(station, "start_time");
+        String stopTime = getJsonStr(station, "stopover_time");
+        return (index + 1) + ". " + stationName
+                + "  " + arriveTime + "/" + departTime
+                + "  停" + stopTime;
     }
 
     private String getJsonStr(JsonObject obj, String key) {
