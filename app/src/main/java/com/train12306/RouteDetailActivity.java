@@ -183,10 +183,13 @@ public class RouteDetailActivity extends Activity {
 
     /**
      * 解析 12306 API 响应中的经停站数据
-     * 使用 lenient 模式兼容 BOM 等非标准格式
+     * 12306 返回格式: {"data": [{"station_name":"...", "arrive_time":"...", "start_time":"...", "stopover_time":"..."}, ...]}
      */
     private void parseRoute(String data) {
         try {
+            // 打印原始响应到日志帮助调试
+            AppLogger.log("ROUTE", "原始响应: " + (data.length() > 300 ? data.substring(0, 300) + "..." : data));
+
             // 使用 lenient 模式解析，兼容 12306 返回的非标准 JSON
             JsonObject json = new GsonBuilder().setLenient().create()
                     .fromJson(data, JsonObject.class);
@@ -196,32 +199,48 @@ public class RouteDetailActivity extends Activity {
                 return;
             }
 
-            if (json.has("data") && json.get("data").isJsonObject()) {
-                JsonArray dataArray = json.getAsJsonObject("data").getAsJsonArray("data");
-                if (dataArray != null && dataArray.size() > 0) {
-                    // 取第一个车次的数据
-                    JsonObject train = dataArray.get(0).getAsJsonObject();
-                    if (train.has("stations")) {
-                        JsonArray stations = train.getAsJsonArray("stations");
-                        for (int i = 0; i < stations.size(); i++) {
-                            JsonObject station = stations.get(i).getAsJsonObject();
-                            String stationName = getJsonStr(station, "station_name");
-                            String arriveTime = getJsonStr(station, "arrive_time");
-                            String departTime = getJsonStr(station, "start_time");
-                            String stopTime = getJsonStr(station, "stopover_time");
-                            routeStations.add((i + 1) + ". " + stationName
-                                    + "  " + arriveTime + "/" + departTime
-                                    + "  停" + stopTime);
+            // 尝试从 data 字段获取车站数组
+            if (json.has("data")) {
+                if (json.get("data").isJsonArray()) {
+                    // 格式: {"data": [{"station_name":"...", ...}, ...]}
+                    JsonArray stations = json.getAsJsonArray("data");
+                    for (int i = 0; i < stations.size(); i++) {
+                        JsonObject station = stations.get(i).getAsJsonObject();
+                        String stationName = getJsonStr(station, "station_name");
+                        String arriveTime = getJsonStr(station, "arrive_time");
+                        String departTime = getJsonStr(station, "start_time");
+                        String stopTime = getJsonStr(station, "stopover_time");
+                        routeStations.add((i + 1) + ". " + stationName
+                                + "  " + arriveTime + "/" + departTime
+                                + "  停" + stopTime);
+                    }
+                } else if (json.get("data").isJsonObject()) {
+                    // 格式: {"data": {"data": [{"stations": [...]}, ...]}}
+                    JsonObject dataObj = json.getAsJsonObject("data");
+                    if (dataObj.has("data") && dataObj.get("data").isJsonArray()) {
+                        JsonArray dataArray = dataObj.getAsJsonArray("data");
+                        if (dataArray.size() > 0) {
+                            JsonObject train = dataArray.get(0).getAsJsonObject();
+                            if (train.has("stations")) {
+                                JsonArray stations = train.getAsJsonArray("stations");
+                                for (int i = 0; i < stations.size(); i++) {
+                                    JsonObject station = stations.get(i).getAsJsonObject();
+                                    String stationName = getJsonStr(station, "station_name");
+                                    String arriveTime = getJsonStr(station, "arrive_time");
+                                    String departTime = getJsonStr(station, "start_time");
+                                    String stopTime = getJsonStr(station, "stopover_time");
+                                    routeStations.add((i + 1) + ". " + stationName
+                                            + "  " + arriveTime + "/" + departTime
+                                            + "  停" + stopTime);
+                                }
+                            }
                         }
                     }
-                } else {
-                    routeStations.add("该车次暂无线经停数据（data 数组为空）");
                 }
-            } else {
-                // 尝试显示完整响应帮助调试
-                String preview = data.length() > 200 ? data.substring(0, 200) + "..." : data;
-                routeStations.add("API 返回格式异常，前200字符: " + preview);
-                AppLogger.warn("ROUTE", "API 响应无 data 字段: " + preview);
+            }
+
+            if (routeStations.isEmpty()) {
+                routeStations.add("该车次暂无经停站数据");
             }
             AppLogger.log("ROUTE", "解析到 " + routeStations.size() + " 个经停站");
         } catch (Throwable t) {
