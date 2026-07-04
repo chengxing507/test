@@ -105,32 +105,44 @@ public class TicketListActivity extends Activity {
          * 格式: "车次 trainNo 出发站 到达站 出发时间 到达时间 历时"
          */
         private void parseTickets(String data) {
-            if (data == null || data.isEmpty()) {
-                AppLogger.warn("TICKET", "车次数据为空");
-                return;
-            }
+                    if (data == null || data.isEmpty()) {
+                        AppLogger.warn("TICKET", "车次数据为空");
+                        return;
+                    }
 
-            String[] lines = data.split("\\n");
-            for (String line : lines) {
-                line = line.trim();
-                if (line.isEmpty() || line.startsWith("查询失败") || line.startsWith("解析失败")) {
-                    continue;
+                    // DEBUG: 打印数据前200字符
+                    String debugPreview = data.length() > 200 ? data.substring(0, 200) + "..." : data;
+                    AppLogger.log("TICKET", "原始数据预览: " + debugPreview.replace("\n", "\\n"));
+
+                    String[] lines = data.split("\\n");
+                    AppLogger.log("TICKET", "分割后共 " + lines.length + " 行");
+                    AppLogger.log("TICKET", "第一行: " + (lines.length > 0 ? lines[0] : "(空)"));
+
+                    for (String line : lines) {
+                        line = line.trim();
+                        if (line.isEmpty() || line.startsWith("查询失败") || line.startsWith("解析失败")) {
+                            if (!line.isEmpty()) AppLogger.log("TICKET", "跳过行: " + line.substring(0, Math.min(50, line.length())));
+                            continue;
+                        }
+                        String[] parts = line.split("\\s+");
+                        AppLogger.log("TICKET", "行 '" + line.substring(0, Math.min(40, line.length())) + "' 分割为 " + parts.length + " 部分");
+                        if (parts.length >= 6) {
+                            TicketItem item = new TicketItem();
+                            item.trainCode = parts[0];
+                            item.trainNo = parts[1];
+                            item.fromStation = parts.length > 2 ? parts[2] : fromStation;
+                            item.toStation = parts.length > 3 ? parts[3] : toStation;
+                            item.startTime = parts.length > 4 ? parts[4] : "";
+                            item.arriveTime = parts.length > 5 ? parts[5] : "";
+                            item.duration = parts.length > 6 ? parts[6] : "";
+                            ticketList.add(item);
+                            AppLogger.log("TICKET", "✓ 添加车次: " + item.trainCode);
+                        } else {
+                            AppLogger.warn("TICKET", "✗ 字段不足: 仅 " + parts.length + " 个字段: " + line);
+                        }
+                    }
+                    AppLogger.log("TICKET", "解析到 " + ticketList.size() + " 个车次");
                 }
-                String[] parts = line.split("\\\\s+");
-                if (parts.length >= 6) {
-                    TicketItem item = new TicketItem();
-                    item.trainCode = parts[0];
-                    item.trainNo = parts[1];
-                    item.fromStation = parts.length > 2 ? parts[2] : fromStation;
-                    item.toStation = parts.length > 3 ? parts[3] : toStation;
-                    item.startTime = parts.length > 4 ? parts[4] : "";
-                    item.arriveTime = parts.length > 5 ? parts[5] : "";
-                    item.duration = parts.length > 6 ? parts[6] : "";
-                    ticketList.add(item);
-                }
-            }
-            AppLogger.log("TICKET", "解析到 " + ticketList.size() + " 个车次");
-        }
 
     // ======================== 列表适配器 ========================
 
