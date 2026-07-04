@@ -238,22 +238,17 @@ public class RouteDetailActivity extends Activity {
                     parsed = true;
                 }
 
-                // 格式3: {"data": {"data": [{"stations": [...]}, ...]}}
+                // 格式3: {"data": {"data": [{"station_name":"...", ...}, ...]}}
                 if (!parsed && json.get("data").isJsonObject()) {
                     JsonObject dataObj = json.getAsJsonObject("data");
                     if (dataObj.has("data") && dataObj.get("data").isJsonArray()) {
-                        JsonArray dataArray = dataObj.getAsJsonArray("data");
-                        if (dataArray.size() > 0) {
-                            JsonObject train = dataArray.get(0).getAsJsonObject();
-                            if (train.has("stations")) {
-                                JsonArray stations = train.getAsJsonArray("stations");
-                                for (int i = 0; i < stations.size(); i++) {
-                                    JsonObject station = stations.get(i).getAsJsonObject();
-                                    routeStations.add(formatStation(station, i));
-                                }
-                                parsed = true;
-                            }
+                        JsonArray stations = dataObj.getAsJsonArray("data");
+                        // data.data 直接就是车站数组
+                        for (int i = 0; i < stations.size(); i++) {
+                            JsonObject station = stations.get(i).getAsJsonObject();
+                            routeStations.add(formatStation(station, i));
                         }
+                        parsed = true;
                     }
                 }
             }
